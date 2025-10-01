@@ -1,14 +1,12 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { expenseData, budgetData } from '../../constants';
-import type { Currency } from '../../types';
-import { ExpenseCategory } from '../../types';
-// FIX: Removed `formatCurrency` from this import to resolve a name conflict with the local, chart-specific `formatCurrency` function defined below.
+import { expenseData, budgetData, expenseSourceOptions } from '../../constants';
+import type { Currency, ExpenseSource } from '../../types';
 import { convertAmount } from '../../utils/currency';
 
 interface BudgetBarChartProps {
     currency: Currency;
-    onCategoryClick: (category: ExpenseCategory) => void;
+    onCategoryClick: (category: ExpenseSource) => void;
 }
 
 const CustomTooltip = ({ active, payload, label, currency }: any) => {
@@ -27,18 +25,19 @@ const CustomTooltip = ({ active, payload, label, currency }: any) => {
 const BudgetBarChart: React.FC<BudgetBarChartProps> = ({ currency, onCategoryClick }) => {
     const chartData = useMemo(() => {
         const actualSpending = expenseData.reduce((acc, expense) => {
-            if (!acc[expense.category]) {
-                acc[expense.category] = 0;
+            const category = expense.category as ExpenseSource;
+            if (!acc[category]) {
+                acc[category] = 0;
             }
-            acc[expense.category] += expense.amount;
+            acc[category] += expense.amount;
             return acc;
-        }, {} as Record<ExpenseCategory, number>);
+        }, {} as Record<ExpenseSource, number>);
 
-        return Object.keys(budgetData).map(cat => {
-            const category = cat as ExpenseCategory;
+        return expenseSourceOptions.map(option => {
+            const category = option.source as ExpenseSource;
             return {
                 name: category,
-                budget: convertAmount(budgetData[category], 'USD', currency.code),
+                budget: convertAmount(budgetData[category] || 0, 'USD', currency.code),
                 actual: convertAmount(actualSpending[category] || 0, 'USD', currency.code),
             }
         });
@@ -47,7 +46,7 @@ const BudgetBarChart: React.FC<BudgetBarChartProps> = ({ currency, onCategoryCli
     const handleBarClick = (data: any) => {
         if (data && data.activePayload && data.activePayload.length > 0) {
             const category = data.activePayload[0].payload.name;
-            onCategoryClick(category as ExpenseCategory);
+            onCategoryClick(category as ExpenseSource);
         }
     };
 

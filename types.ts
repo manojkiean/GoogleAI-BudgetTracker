@@ -34,7 +34,7 @@ export enum ExpenseCategory {
 export interface Expense {
   id: number;
   item: string;
-  category: ExpenseCategory;
+  category: ExpenseCategory | ExpenseSource;
   amount: number;
   date: string;
   account: string;
@@ -58,7 +58,7 @@ export interface Bill {
   status: 'Pending' | 'Paid';
 }
 
-export interface Account {
+export interface AccountDetails {
   id: number;
   name: string;
   type: string;
@@ -78,4 +78,45 @@ export interface Todo {
   priority: Priority;
   dueDate: string;
   completed: boolean;
+}
+
+export enum Goal {
+  SAVINGS = 'Savings',
+  EXPENSES = 'Expenses',
+  SUBSCRIPTIONS = 'Subscriptions',
+  NONE = 'None',
+}
+
+export enum IncomeSource {
+  BUSINESS = 'Business',
+  SALARY = 'Salary',
+  AIRBNB = 'AirBnB',
+  SELLING_PRODUCTS = 'Selling Products',
+  CRYPTO = 'Crypto',
+  STOCKS_AND_SHARES = 'Stocks & Shares',
+  BANKING = 'Banking',
+}
+
+export enum ExpenseSource {
+  RENT = 'Rent or Mortgage',
+  BILLS = 'Bills & Utilities',
+  FOOD = 'Food',
+  TRANSPORTATION = 'Transportation',
+  GADGETS = 'Gadgets',
+  OTHER = 'Other',
+  PIGGY_POT = 'Piggy Pot',
+  PERSONAL_CARE = 'Personal Care',
+  BUYING_CAR = 'Buying Car',
+  HOLIDAYS = 'Holidays',
+  NETFLIX = 'Netflix',
+  COUNCIL_TAX = 'Council Tax',
+  AMAZON_PRIME = 'Amazon Prime',
+  INSURANCE = 'Insurance',
+}
+
+export enum Account {
+  HSBC = 'HSBC Bank',
+  PAYPAL = 'Paypal',
+  CREDIT_CARD = 'Credit Card',
+  VOUCHERS = 'Vouchers',
 }

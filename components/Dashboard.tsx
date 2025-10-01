@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import type { Currency, ExpenseCategory, Todo, Subscription, Bill } from '../types';
-import { incomeData, expenseData, accountData, incomeGoalData, budgetData, todoData, subscriptionData, billData } from '../constants';
+import type { Currency, ExpenseCategory, Todo, Subscription, Bill, Goal, ExpenseSource, IncomeSource } from '../types';
+import { incomeData, expenseData, accountData, incomeGoalData, budgetData, todoData, subscriptionData, billData, incomeSourceOptions, expenseSourceOptions } from '../constants';
 import SummaryCard from './SummaryCard';
 import ExpensePieChart from './charts/ExpensePieChart';
 import BudgetBarChart from './charts/BudgetBarChart';
@@ -9,7 +9,7 @@ import { DollarIcon, EuroIcon, PoundIcon, AccountsIcon as AccIcon } from './icon
 
 interface DashboardProps {
   currency: Currency;
-  onCategorySelect: (category: ExpenseCategory) => void;
+  onCategorySelect: (category: ExpenseSource) => void;
 }
 
 const GoalProgress: React.FC<{ title: string; current: number; goal: number; currency: Currency; colorClass: string }> = ({ title, current, goal, currency, colorClass }) => {
@@ -36,20 +36,22 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect }) => 
     const totalAccounts = useMemo(() => accountData.reduce((acc, item) => acc + convertAmount(item.balance, 'USD', currency.code), 0), [currency.code]);
 
     const incomeByCategory = useMemo(() => incomeData.reduce((acc, item) => {
-        if (!acc[item.category]) {
-            acc[item.category] = 0;
+        const category = item.category as IncomeSource;
+        if (!acc[category]) {
+            acc[category] = 0;
         }
-        acc[item.category] += convertAmount(item.amount, 'USD', currency.code);
+        acc[category] += convertAmount(item.amount, 'USD', currency.code);
         return acc;
-    }, {} as Record<string, number>), [currency.code]);
+    }, {} as Record<IncomeSource, number>), [currency.code]);
 
     const expenseByCategory = useMemo(() => expenseData.reduce((acc, item) => {
-        if (!acc[item.category]) {
-            acc[item.category] = 0;
+        const category = item.category as ExpenseSource;
+        if (!acc[category]) {
+            acc[category] = 0;
         }
-        acc[item.category] += convertAmount(item.amount, 'USD', currency.code);
+        acc[category] += convertAmount(item.amount, 'USD', currency.code);
         return acc;
-    }, {} as Record<ExpenseCategory, number>), [currency.code]);
+    }, {} as Record<ExpenseSource, number>), [currency.code]);
 
     const upcomingTodos = useMemo(() => {
         const today = new Date();
@@ -117,12 +119,12 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect }) => 
                 <div className="col-span-1 md:col-span-2 bg-gray-800 p-6 rounded-2xl shadow-lg">
                      <h3 className="text-xl font-semibold mb-4">Income Goals</h3>
                      <div className="space-y-4">
-                         {Object.keys(incomeGoalData).map(category => (
+                         {incomeSourceOptions.filter(option => option.goal !== 'None').map(option => (
                              <GoalProgress 
-                                 key={category}
-                                 title={category}
-                                 current={incomeByCategory[category] || 0}
-                                 goal={convertAmount(incomeGoalData[category], 'USD', currency.code)}
+                                 key={option.source}
+                                 title={option.source}
+                                 current={incomeByCategory[option.source] || 0}
+                                 goal={convertAmount(incomeGoalData[option.source] || 0, 'USD', currency.code)}
                                  currency={currency}
                                  colorClass="bg-gradient-to-r from-cyan-500 to-blue-500"
                              />
@@ -132,12 +134,12 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect }) => 
                 <div className="col-span-1 md:col-span-2 bg-gray-800 p-6 rounded-2xl shadow-lg">
                      <h3 className="text-xl font-semibold mb-4">Expense Goals</h3>
                      <div className="space-y-4">
-                         {Object.keys(budgetData).map(category => (
+                         {expenseSourceOptions.filter(option => option.goal !== 'None').map(option => (
                              <GoalProgress 
-                                 key={category}
-                                 title={category}
-                                 current={expenseByCategory[category as ExpenseCategory] || 0}
-                                 goal={convertAmount(budgetData[category as ExpenseCategory], 'USD', currency.code)}
+                                 key={option.source}
+                                 title={option.source}
+                                 current={expenseByCategory[option.source] || 0}
+                                 goal={convertAmount(budgetData[option.source] || 0, 'USD', currency.code)}
                                  currency={currency}
                                  colorClass="bg-gradient-to-r from-red-500 to-orange-500"
                              />
