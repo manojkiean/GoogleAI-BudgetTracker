@@ -1,5 +1,5 @@
 {
-  "name": "zenith-budget-tracker",
+  "name": "budget-tracker",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,7 @@
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "recharts": "3.0.0-alpha.10"
+    "recharts": "^2.12.7"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

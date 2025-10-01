@@ -4,12 +4,18 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zenith Budget Tracker</title>
+    <title>Budget Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
+            fontFamily: {
+              sans: ['Poppins', 'sans-serif'],
+            },
             colors: {
               'gray-900': '#121212',
               'gray-800': '#1E1E1E',
@@ -44,7 +50,7 @@
 
     
   </head>
-  <body class="bg-gray-900 text-gray-200">
+  <body class="bg-gray-900 text-gray-200 font-sans">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
