@@ -27,6 +27,13 @@ export const budgetData: Record<ExpenseCategory, number> = {
     [ExpenseCategory.Shopping]: 200,
 };
 
+export const incomeGoalData: Record<string, number> = {
+    'Job': 6000,
+    'Side Hustle': 1500,
+    'Investments': 500,
+    'Gift': 0,
+};
+
 export const subscriptionData: Subscription[] = [
   { id: 1, service: 'Netflix', amount: 15.99, frequency: 'Monthly', nextPayment: '2023-11-05', status: 'Active' },
   { id: 2, service: 'Spotify', amount: 9.99, frequency: 'Monthly', nextPayment: '2023-11-10', status: 'Active' },
