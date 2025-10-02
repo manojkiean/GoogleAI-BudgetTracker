@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Tab } from '../types';
-import { DashboardIcon, IncomeIcon, ExpensesIcon, SubscriptionsIcon, GoalIcon, AccountsIcon, TodoIcon, MyAccountIcon } from './icons/IconComponents';
+import { DashboardIcon, IncomeIcon, ExpensesIcon, SubscriptionsIcon, GoalIcon, AccountsIcon, TodoIcon, MyAccountIcon, CalcIcon } from './icons/IconComponents';
 
 interface NavigationProps {
   activeTab: Tab;
@@ -8,19 +9,52 @@ interface NavigationProps {
   sidebarOpen: boolean;
 }
 
-const navItems: { tab: Tab; icon: React.ReactNode }[] = [
-  { tab: Tab.DASHBOARD, icon: <DashboardIcon /> },
-  { tab: Tab.INCOME, icon: <IncomeIcon /> },
-  { tab: Tab.EXPENSES, icon: <ExpensesIcon /> },
-  { tab: Tab.SUBSCRIPTIONS, icon: <SubscriptionsIcon /> },
-  { tab: Tab.GOALS, icon: <GoalIcon /> },
-  { tab: Tab.ACCOUNTS, icon: <AccountsIcon /> },
-  { tab: Tab.TODO, icon: <TodoIcon /> },
-  { tab: Tab.MY_ACCOUNT, icon: <MyAccountIcon /> },
+interface NavItemType {
+  tab: Tab;
+  icon: React.ReactNode;
+}
+
+interface NavGroup {
+    title: string;
+    items: NavItemType[];
+}
+
+const navGroups: NavGroup[] = [
+    {
+        title: 'Overview',
+        items: [
+            { tab: Tab.DASHBOARD, icon: <DashboardIcon /> },
+        ]
+    },
+    {
+        title: 'Finances',
+        items: [
+            { tab: Tab.ACCOUNTS, icon: <AccountsIcon /> },
+            { tab: Tab.EXPENSES, icon: <ExpensesIcon /> },
+            { tab: Tab.INCOME, icon: <IncomeIcon /> },
+        ]
+    },
+    {
+        title: 'Planning',
+        items: [
+            { tab: Tab.GOALS, icon: <GoalIcon /> },
+            { tab: Tab.SUBSCRIPTIONS, icon: <SubscriptionsIcon /> },
+            { tab: Tab.TODO, icon: <TodoIcon /> },
+        ]
+    },
+    {
+        title: 'Settings',
+        items: [
+            { tab: Tab.MY_ACCOUNT, icon: <MyAccountIcon /> },
+        ]
+    }
 ];
 
+// Flattened for mobile view
+const navItems: NavItemType[] = navGroups.flatMap(g => g.items);
+
 const NavItem: React.FC<{
-    item: { tab: Tab; icon: React.ReactNode };
+    item: NavItemType;
     isActive: boolean;
     onClick: () => void;
     sidebarOpen: boolean;
@@ -44,18 +78,24 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, sideba
     <>
       {/* Sidebar for large screens */}
       <aside className={`hidden lg:flex flex-col bg-gray-800 p-4 fixed h-full transition-width duration-300 ${sidebarOpen ? 'w-64 xl:w-72' : 'w-20'}`}>
-        <div className={`text-2xl font-bold text-white mb-10 flex items-center ${sidebarOpen ? 'justify-center' : 'justify-start'}`}>
-            {sidebarOpen ? 'Zenith' : 'Z'}
+        <div className={`text-2xl font-bold text-white mb-10 flex items-center ${sidebarOpen ? 'justify-start' : 'justify-center'} pl-2'}`}>
+            <CalcIcon />
+            {sidebarOpen && <span className="ml-2">Budget Tracker</span>}
         </div>
         <nav className="flex flex-col space-y-2" aria-label="Main navigation">
-          {navItems.map((item) => (
-            <NavItem 
-              key={item.tab}
-              item={item}
-              isActive={activeTab === item.tab}
-              onClick={() => setActiveTab(item.tab)}
-              sidebarOpen={sidebarOpen}
-            />
+          {navGroups.map((group) => (
+            <div key={group.title}>
+                {sidebarOpen && <h3 className="px-4 pt-4 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{group.title}</h3>}
+                {group.items.map((item) => (
+                    <NavItem
+                        key={item.tab}
+                        item={item}
+                        isActive={activeTab === item.tab}
+                        onClick={() => setActiveTab(item.tab)}
+                        sidebarOpen={sidebarOpen}
+                    />
+                ))}
+            </div>
           ))}
         </nav>
       </aside>

@@ -11,7 +11,7 @@ export enum Tab {
 
 export interface Currency {
   symbol: string;
-  code: 'USD' | 'GBP' | 'EUR';
+  code: 'USD' | 'GBP' | 'EUR' | 'INR' | 'AUD' | 'SGD';
 }
 
 export interface Income {
@@ -122,4 +122,10 @@ export enum Account {
   PAYPAL = 'Paypal',
   CREDIT_CARD = 'Credit Card',
   VOUCHERS = 'Vouchers',
+}
+
+export interface User {
+  userId: string;
+  name: string;
+  currency: string;
 }

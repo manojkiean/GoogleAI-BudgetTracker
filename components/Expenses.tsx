@@ -82,15 +82,15 @@ const ExpenseCard: React.FC<{
     </div>
 );
 
-const ExpenseList: React.FC<{ expenses: Expense[]; currency: Currency }> = ({ expenses, currency }) => (
+const ExpenseList: React.FC<{ expenses: Expense[]; currency: Currency; isDashboard?: boolean; }> = ({ expenses, currency, isDashboard }) => (
     <ul className="space-y-4">
         {expenses.map(expense => (
-            <li key={expense.id} className="grid grid-cols-3 items-center bg-gray-800 p-4 rounded-lg">
+            <li key={expense.id} className={`grid ${isDashboard ? 'grid-cols-2' : 'grid-cols-3'} items-center bg-gray-800 p-4 rounded-lg`}>
                 <div className="flex items-center">
                     {categoryIcons[expense.category] || <ExpensesIcon />}
                     <span className="text-white font-medium ml-2">{expense.category}</span>
                 </div>
-                <span className="text-gray-400 text-sm text-center">{expense.account}</span>
+                {!isDashboard && <span className="text-gray-400 text-sm text-center">{expense.account}</span>}
                 <span className="text-red-400 font-semibold text-right">{formatCurrency(convertAmount(expense.amount, 'USD', currency.code), currency)}</span>
             </li>
         ))}
@@ -143,7 +143,7 @@ const Expenses: React.FC<ExpensesProps> = ({ currency, filter, onClearFilter, is
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     if (isDashboard) {
-        return <ExpenseList expenses={filteredExpenses} currency={currency} />;
+        return <ExpenseList expenses={filteredExpenses} currency={currency} isDashboard={isDashboard} />;
     }
 
     return (

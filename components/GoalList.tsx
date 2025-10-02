@@ -7,9 +7,10 @@ interface GoalListProps {
   currency: Currency;
   onEdit?: (goal: GoalDetails) => void;
   onDelete?: (id: number) => void;
+  progressBarColor?: string;
 }
 
-const GoalList: React.FC<GoalListProps> = ({ goals, currency, onEdit, onDelete }) => {
+const GoalList: React.FC<GoalListProps> = ({ goals, currency, onEdit, onDelete, progressBarColor = 'bg-gradient-to-r from-purple-500 to-pink-500' }) => {
   if (goals.length === 0) {
     return null;
   }
@@ -24,7 +25,7 @@ const GoalList: React.FC<GoalListProps> = ({ goals, currency, onEdit, onDelete }
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
             <div
-              className="bg-gradient-to-r from-purple-500 to-pink-500 h-2.5 rounded-full"
+              className={`${progressBarColor} h-2.5 rounded-full`}
               style={{ width: `${(goal.amount / goal.goalAmount) * 100}%` }}
             ></div>
           </div>

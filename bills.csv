@@ -1,0 +1,3 @@
+id,name,dueDate,amount,category,status
+1,Rent,2024-02-01,1200,Rent or Mortgage,Pending
+2,Car Insurance,2024-02-10,100,Insurance,Pending
