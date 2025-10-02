@@ -92,11 +92,11 @@ const App: React.FC = () => {
       [Tab.DASHBOARD]: <Dashboard currency={currency} onCategorySelect={handleCategorySelect} todos={todos} subscriptions={subscriptions} />,
       [Tab.INCOME]: <Income currency={currency} />,
       [Tab.EXPENSES]: <Expenses currency={currency} filter={expenseFilter} onClearFilter={clearExpenseFilter} />,
-      [Tab.SUBSCRIPTIONS]: <Subscriptions currency={currency} subscriptions={subscriptions} onUpdateSubscriptions={updateSubscriptions} />,
+      [Tab.SUBSCRIPTIONS]: <Subscriptions currency={currency} />,
       [Tab.GOALS]: <Goals currency={currency} />,
       [Tab.ACCOUNTS]: <Accounts currency={currency} />,
-      [Tab.REPORTS]: <Reports />,
-      [Tab.TODO]: <TodoList todos={todos} onUpdateTodos={updateTodos} />,
+      [Tab.REPORTS]: <Reports currency={currency} />,
+      [Tab.TODO]: <TodoList initialTodos={todos} onUpdateTodos={updateTodos} />,
       [Tab.MY_ACCOUNT]: <MyAccount user={currentUser} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />,
     };
     return components[activeTab] || components[Tab.DASHBOARD];
