@@ -15,6 +15,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.DASHBOARD);
   const [currency, setCurrency] = useState<Currency>({ symbol: '$', code: 'USD' });
   const [expenseFilter, setExpenseFilter] = useState<ExpenseCategory | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleCategorySelect = useCallback((category: ExpenseCategory) => {
     setExpenseFilter(category);
@@ -32,6 +33,10 @@ const App: React.FC = () => {
     setActiveTab(tab);
   }, [activeTab, clearExpenseFilter]);
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   const renderContent = () => {
     const components: Record<Tab, React.ReactNode> = {
       [Tab.DASHBOARD]: <Dashboard currency={currency} onCategorySelect={handleCategorySelect} />,
@@ -47,9 +52,9 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans flex flex-col lg:flex-row">
-      <Navigation activeTab={activeTab} setActiveTab={handleSetTab} />
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-64 xl:ml-72">
-        <Header currency={currency} setCurrency={setCurrency} />
+      <Navigation activeTab={activeTab} setActiveTab={handleSetTab} sidebarOpen={sidebarOpen} />
+      <main className={`flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64 xl:ml-72' : 'lg:ml-20'}`}>
+        <Header currency={currency} setCurrency={setCurrency} toggleSidebar={toggleSidebar} />
         <div className="mt-8 animate-fade-in">
           {renderContent()}
         </div>

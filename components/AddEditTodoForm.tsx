@@ -18,6 +18,10 @@ const AddEditTodoForm: React.FC<AddEditTodoFormProps> = ({ todo, onSave, onCance
       setTask(todo.task);
       setPriority(todo.priority);
       setDueDate(new Date(todo.dueDate).toISOString().split('T')[0]);
+    } else {
+        setTask('');
+        setPriority(Priority.Medium);
+        setDueDate(new Date().toISOString().split('T')[0]);
     }
   }, [todo]);
 

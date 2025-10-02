@@ -1,25 +1,33 @@
 
-import React, { useState } from 'react';
-import type { Currency, Expense } from '../types';
-import { ExpenseCategory } from '../types';
-import { expenseData } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { ExpenseSource } from '../types';
+import type { Currency, Expense, Account } from '../types';
 import { formatCurrency, convertAmount } from '../utils/currency';
 import { CalendarIcon, CreditCardIcon } from './icons/IconComponents';
 import AddEditExpenseForm from './AddEditExpenseForm';
+import { getExpenses, addExpense, updateExpense, deleteExpense } from '../utils/api';
 
 interface ExpensesProps {
   currency: Currency;
-  filter: ExpenseCategory | null;
+  filter: ExpenseSource | null;
   onClearFilter: () => void;
 }
 
-const categoryColors: Record<ExpenseCategory, string> = {
-    [ExpenseCategory.Food]: 'border-red-500',
-    [ExpenseCategory.Transport]: 'border-blue-500',
-    [ExpenseCategory.Entertainment]: 'border-purple-500',
-    [ExpenseCategory.Utilities]: 'border-yellow-500',
-    [ExpenseCategory.Healthcare]: 'border-green-500',
-    [ExpenseCategory.Shopping]: 'border-pink-500',
+const categoryColors: Record<ExpenseSource, string> = {
+    [ExpenseSource.RENT]: 'border-red-500',
+    [ExpenseSource.BILLS]: 'border-blue-500',
+    [ExpenseSource.FOOD]: 'border-purple-500',
+    [ExpenseSource.TRANSPORTATION]: 'border-yellow-500',
+    [ExpenseSource.GADGETS]: 'border-green-500',
+    [ExpenseSource.OTHER]: 'border-pink-500',
+    [ExpenseSource.PIGGY_POT]: 'border-indigo-500',
+    [ExpenseSource.PERSONAL_CARE]: 'border-teal-500',
+    [ExpenseSource.BUYING_CAR]: 'border-orange-500',
+    [ExpenseSource.HOLIDAYS]: 'border-lime-500',
+    [ExpenseSource.NETFLIX]: 'border-rose-500',
+    [ExpenseSource.COUNCIL_TAX]: 'border-cyan-500',
+    [ExpenseSource.AMAZON_PRIME]: 'border-amber-500',
+    [ExpenseSource.INSURANCE]: 'border-emerald-500',
 };
 
 const ExpenseCard: React.FC<{ 
@@ -56,26 +64,30 @@ const ExpenseCard: React.FC<{
 );
 
 const Expenses: React.FC<ExpensesProps> = ({ currency, filter, onClearFilter }) => {
-    const [expenses, setExpenses] = useState<Expense[]>(expenseData);
+    const [expenses, setExpenses] = useState<Expense[]>([]);
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
+    useEffect(() => {
+        getExpenses().then(setExpenses);
+    }, []);
+
     const handleSaveExpense = (expenseData: Omit<Expense, 'id'> & { id?: number }) => {
-        if (expenseData.id) {
-            setExpenses(expenses.map(e => e.id === expenseData.id ? { ...e, ...expenseData, id: e.id } : e));
-        } else {
-            const newExpense: Expense = {
-                id: Date.now(),
-                ...expenseData,
-            };
-            setExpenses([newExpense, ...expenses]);
-        }
-        setIsFormVisible(false);
-        setEditingExpense(null);
+        const promise = expenseData.id
+            ? updateExpense({ ...expenseData, id: expenseData.id } as Expense)
+            : addExpense(expenseData as Omit<Expense, 'id'>);
+
+        promise.then(() => {
+            getExpenses().then(setExpenses);
+            setIsFormVisible(false);
+            setEditingExpense(null);
+        });
     };
 
     const handleDeleteExpense = (id: number) => {
-        setExpenses(expenses.filter(e => e.id !== id));
+        deleteExpense(id).then(() => {
+            setExpenses(expenses.filter(e => e.id !== id));
+        });
     };
 
     const handleEditClick = (expense: Expense) => {

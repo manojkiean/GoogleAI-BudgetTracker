@@ -19,25 +19,16 @@ export interface Income {
   category: string;
   amount: number;
   date: string;
-  account: string;
-}
-
-export enum ExpenseCategory {
-    Food = 'Food',
-    Transport = 'Transport',
-    Entertainment = 'Entertainment',
-    Utilities = 'Utilities',
-    Healthcare = 'Healthcare',
-    Shopping = 'Shopping'
+  account: Account;
 }
 
 export interface Expense {
   id: number;
   item: string;
-  category: ExpenseCategory | ExpenseSource;
+  category: ExpenseSource;
   amount: number;
   date: string;
-  account: string;
+  account: Account;
 }
 
 export interface Subscription {
@@ -113,6 +104,8 @@ export enum ExpenseSource {
   AMAZON_PRIME = 'Amazon Prime',
   INSURANCE = 'Insurance',
 }
+
+export type ExpenseCategory = ExpenseSource;
 
 export enum Account {
   HSBC = 'HSBC Bank',

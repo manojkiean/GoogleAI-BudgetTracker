@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
-import { todoData } from '../constants';
+import React, { useState, useEffect } from 'react';
 import { Priority, Todo } from '../types';
 import AddEditTodoForm from './AddEditTodoForm';
+import { getTodos, addTodo, updateTodo, deleteTodo } from '../utils/api';
 
 const priorityColors: Record<Priority, string> = {
     [Priority.High]: 'bg-red-500',
@@ -12,7 +12,7 @@ const priorityColors: Record<Priority, string> = {
 
 const TodoItem: React.FC<{ 
     todo: Todo; 
-    onToggle: (id: number) => void; 
+    onToggle: (id: number, completed: boolean) => void; 
     onEdit: (todo: Todo) => void;
     onDelete: (id: number) => void;
 }> = ({ todo, onToggle, onEdit, onDelete }) => (
@@ -22,7 +22,7 @@ const TodoItem: React.FC<{
                 type="checkbox"
                 id={`todo-${todo.id}`}
                 checked={todo.completed}
-                onChange={() => onToggle(todo.id)}
+                onChange={() => onToggle(todo.id, !todo.completed)}
                 className="w-5 h-5 rounded text-cyan-500 bg-gray-800 border-gray-600 focus:ring-cyan-600 cursor-pointer"
             />
             <label htmlFor={`todo-${todo.id}`} className="ml-4 cursor-pointer">
@@ -44,33 +44,39 @@ const TodoItem: React.FC<{
 );
 
 const TodoList: React.FC = () => {
-    const [todos, setTodos] = useState<Todo[]>(todoData);
+    const [todos, setTodos] = useState<Todo[]>([]);
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
 
-    const handleToggleTodo = (id: number) => {
-        setTodos(todos.map(todo => 
-            todo.id === id ? { ...todo, completed: !todo.completed } : todo
-        ));
+    useEffect(() => {
+        getTodos().then(setTodos);
+    }, []);
+
+    const handleToggleTodo = (id: number, completed: boolean) => {
+        const todo = todos.find(t => t.id === id);
+        if (todo) {
+            updateTodo({ ...todo, completed }).then(() => {
+                getTodos().then(setTodos);
+            });
+        }
     };
 
     const handleSaveTodo = (todoData: Omit<Todo, 'id' | 'completed'> & { id?: number }) => {
-        if (todoData.id) {
-            setTodos(todos.map(t => t.id === todoData.id ? { ...t, ...todoData, id: t.id, completed: t.completed } : t));
-        } else {
-            const newTodo: Todo = {
-                id: Date.now(),
-                ...todoData,
-                completed: false,
-            };
-            setTodos([newTodo, ...todos]);
-        }
-        setIsFormVisible(false);
-        setEditingTodo(null);
+        const promise = todoData.id
+            ? updateTodo({ ...todos.find(t => t.id === todoData.id)!, ...todoData } as Todo)
+            : addTodo({ ...todoData, completed: false } as Omit<Todo, 'id'>);
+
+        promise.then(() => {
+            getTodos().then(setTodos);
+            setIsFormVisible(false);
+            setEditingTodo(null);
+        });
     };
 
     const handleDeleteTodo = (id: number) => {
-        setTodos(todos.filter(todo => todo.id !== id));
+        deleteTodo(id).then(() => {
+            setTodos(todos.filter(todo => todo.id !== id));
+        });
     };
 
     const handleEditClick = (todo: Todo) => {

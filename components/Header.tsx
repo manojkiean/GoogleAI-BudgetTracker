@@ -1,10 +1,11 @@
 import React from 'react';
 import type { Currency } from '../types';
-import { CurrencyIcon } from './icons/IconComponents';
+import { CurrencyIcon, MenuIcon } from './icons/IconComponents';
 
 interface HeaderProps {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
+  toggleSidebar: () => void;
 }
 
 const currencies: Currency[] = [
@@ -13,7 +14,7 @@ const currencies: Currency[] = [
   { symbol: '€', code: 'EUR' },
 ];
 
-const Header: React.FC<HeaderProps> = ({ currency, setCurrency }) => {
+const Header: React.FC<HeaderProps> = ({ currency, setCurrency, toggleSidebar }) => {
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCurrency = currencies.find(c => c.code === e.target.value);
     if (newCurrency) {
@@ -23,7 +24,12 @@ const Header: React.FC<HeaderProps> = ({ currency, setCurrency }) => {
 
   return (
     <header className="flex justify-between items-center">
-      <h1 className="text-2xl sm:text-3xl font-bold text-white">Zenith Budget</h1>
+      <div className="flex items-center">
+        <button onClick={toggleSidebar} className="lg:hidden mr-4">
+          <MenuIcon />
+        </button>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">Zenith Budget</h1>
+      </div>
       <div className="relative">
         <label htmlFor="currency-select" className="sr-only">Select Currency</label>
         <select

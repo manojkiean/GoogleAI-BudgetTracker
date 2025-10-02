@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Currency, Subscription } from '../types';
-import { subscriptionData } from '../constants';
 import { formatCurrency, convertAmount } from '../utils/currency';
 import AddEditSubscriptionForm from './AddEditSubscriptionForm';
+import { getSubscriptions, addSubscription, updateSubscription, deleteSubscription } from '../utils/api';
 
 interface SubscriptionsProps {
   currency: Currency;
@@ -39,9 +39,13 @@ const SubscriptionCard: React.FC<{
 );
 
 const Subscriptions: React.FC<SubscriptionsProps> = ({ currency }) => {
-    const [subscriptions, setSubscriptions] = useState<Subscription[]>(subscriptionData);
+    const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
+
+    useEffect(() => {
+        getSubscriptions().then(setSubscriptions);
+    }, []);
 
     const totalMonthlyCost = subscriptions
         .filter(sub => sub.status === 'Active')
@@ -51,21 +55,21 @@ const Subscriptions: React.FC<SubscriptionsProps> = ({ currency }) => {
         }, 0);
 
     const handleSaveSubscription = (subscriptionData: Omit<Subscription, 'id'> & { id?: number }) => {
-        if (subscriptionData.id) {
-            setSubscriptions(subscriptions.map(s => s.id === subscriptionData.id ? { ...s, ...subscriptionData, id: s.id } : s));
-        } else {
-            const newSubscription: Subscription = {
-                id: Date.now(),
-                ...subscriptionData,
-            };
-            setSubscriptions([newSubscription, ...subscriptions]);
-        }
-        setIsFormVisible(false);
-        setEditingSubscription(null);
+        const promise = subscriptionData.id
+            ? updateSubscription({ ...subscriptionData, id: subscriptionData.id } as Subscription)
+            : addSubscription(subscriptionData as Omit<Subscription, 'id'>);
+
+        promise.then(() => {
+            getSubscriptions().then(setSubscriptions);
+            setIsFormVisible(false);
+            setEditingSubscription(null);
+        });
     };
 
     const handleDeleteSubscription = (id: number) => {
-        setSubscriptions(subscriptions.filter(s => s.id !== id));
+        deleteSubscription(id).then(() => {
+            setSubscriptions(subscriptions.filter(s => s.id !== id));
+        });
     };
 
     const handleEditClick = (subscription: Subscription) => {

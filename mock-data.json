@@ -1,8 +1,27 @@
 {
-    "incomes": [],
-    "expenses": [],
-    "subscriptions": [],
-    "bills": [],
-    "accounts": [],
-    "todos": []
+  "incomes": [
+    { "id": 1, "source": "Salary", "category": "Salary", "amount": 5000, "date": "2024-01-15", "account": "HSBC Bank" },
+    { "id": 2, "source": "Freelance", "category": "Business", "amount": 1500, "date": "2024-01-20", "account": "Paypal" }
+  ],
+  "expenses": [
+    { "id": 1, "item": "Groceries", "category": "Food", "amount": 300, "date": "2024-01-18", "account": "Credit Card" },
+    { "id": 2, "item": "Utilities", "category": "Bills & Utilities", "amount": 150, "date": "2024-01-22", "account": "HSBC Bank" }
+  ],
+  "subscriptions": [
+    { "id": 1, "service": "Netflix", "amount": 15.99, "frequency": "Monthly", "nextPayment": "2024-02-01", "status": "Active" },
+    { "id": 2, "service": "Spotify", "amount": 9.99, "frequency": "Monthly", "nextPayment": "2024-02-05", "status": "Active" }
+  ],
+  "bills": [
+    { "id": 1, "name": "Rent", "dueDate": "2024-02-01", "amount": 1200, "category": "Rent or Mortgage", "status": "Pending" },
+    { "id": 2, "name": "Car Insurance", "dueDate": "2024-02-10", "amount": 100, "category": "Insurance", "status": "Pending" }
+  ],
+  "accounts": [
+    { "id": 1, "name": "HSBC Bank", "type": "Checking", "balance": 2500, "gradient": "from-blue-500 to-green-500" },
+    { "id": 2, "name": "Paypal", "type": "Digital Wallet", "balance": 10000, "gradient": "from-cyan-500 to-blue-500" }
+  ],
+  "todos": [
+    { "id": 1, "task": "Pay rent", "priority": "High", "dueDate": "2024-07-28", "completed": false },
+    { "id": 2, "task": "File taxes", "priority": "Medium", "dueDate": "2024-07-29", "completed": false },
+    { "id": 3, "task": "Call the electrician", "priority": "Low", "dueDate": "2024-07-30", "completed": false }
+  ]
 }

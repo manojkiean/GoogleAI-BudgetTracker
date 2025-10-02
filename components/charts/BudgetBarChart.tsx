@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { expenseData, budgetData, expenseSourceOptions } from '../../constants';
-import type { Currency, ExpenseSource } from '../../types';
+import { budgetData, expenseSourceOptions } from '../../constants';
+import type { Currency, Expense, ExpenseSource } from '../../types';
 import { convertAmount } from '../../utils/currency';
 
 interface BudgetBarChartProps {
     currency: Currency;
     onCategoryClick: (category: ExpenseSource) => void;
+    expenses: Expense[];
 }
 
 const CustomTooltip = ({ active, payload, label, currency }: any) => {
@@ -22,9 +23,9 @@ const CustomTooltip = ({ active, payload, label, currency }: any) => {
     return null;
 };
 
-const BudgetBarChart: React.FC<BudgetBarChartProps> = ({ currency, onCategoryClick }) => {
+const BudgetBarChart: React.FC<BudgetBarChartProps> = ({ currency, onCategoryClick, expenses }) => {
     const chartData = useMemo(() => {
-        const actualSpending = expenseData.reduce((acc, expense) => {
+        const actualSpending = expenses.reduce((acc, expense) => {
             const category = expense.category as ExpenseSource;
             if (!acc[category]) {
                 acc[category] = 0;
@@ -41,7 +42,7 @@ const BudgetBarChart: React.FC<BudgetBarChartProps> = ({ currency, onCategoryCli
                 actual: convertAmount(actualSpending[category] || 0, 'USD', currency.code),
             }
         });
-    }, [currency]);
+    }, [currency, expenses]);
     
     const handleBarClick = (data: any) => {
         if (data && data.activePayload && data.activePayload.length > 0) {

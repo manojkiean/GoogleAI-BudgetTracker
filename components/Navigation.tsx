@@ -5,6 +5,7 @@ import { DashboardIcon, IncomeIcon, ExpensesIcon, SubscriptionsIcon, BillsIcon, 
 interface NavigationProps {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
+  sidebarOpen: boolean;
 }
 
 const navItems: { tab: Tab; icon: React.ReactNode }[] = [
@@ -21,7 +22,8 @@ const NavItem: React.FC<{
     item: { tab: Tab; icon: React.ReactNode };
     isActive: boolean;
     onClick: () => void;
-}> = ({ item, isActive, onClick }) => (
+    sidebarOpen: boolean;
+}> = ({ item, isActive, onClick, sidebarOpen }) => (
     <button
         onClick={onClick}
         className={`flex items-center w-full px-4 py-3 text-left rounded-lg transition-colors duration-200 ${
@@ -32,17 +34,17 @@ const NavItem: React.FC<{
         aria-current={isActive ? 'page' : undefined}
     >
         {item.icon}
-        <span className="ml-4 font-medium hidden lg:inline">{item.tab}</span>
+        <span className={`ml-4 font-medium ${sidebarOpen ? 'lg:inline' : 'hidden'}`}>{item.tab}</span>
     </button>
 );
 
-const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab }) => {
+const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, sidebarOpen }) => {
   return (
     <>
       {/* Sidebar for large screens */}
-      <aside className="hidden lg:flex flex-col w-64 xl:w-72 bg-gray-800 p-4 fixed h-full">
-        <div className="text-2xl font-bold text-white mb-10 flex items-center justify-center">
-            Zenith
+      <aside className={`hidden lg:flex flex-col bg-gray-800 p-4 fixed h-full transition-width duration-300 ${sidebarOpen ? 'w-64 xl:w-72' : 'w-20'}`}>
+        <div className={`text-2xl font-bold text-white mb-10 flex items-center ${sidebarOpen ? 'justify-center' : 'justify-start'}`}>
+            {sidebarOpen ? 'Zenith' : 'Z'}
         </div>
         <nav className="flex flex-col space-y-2" aria-label="Main navigation">
           {navItems.map((item) => (
@@ -51,6 +53,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab }) => {
               item={item}
               isActive={activeTab === item.tab}
               onClick={() => setActiveTab(item.tab)}
+              sidebarOpen={sidebarOpen}
             />
           ))}
         </nav>

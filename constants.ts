@@ -1,5 +1,5 @@
 
-import { Income, Expense, Subscription, Bill, AccountDetails as Account, Todo, Priority, ExpenseCategory, Goal, IncomeSource, ExpenseSource, Account as AccountEnum } from './types';
+import { Income, Expense, Subscription, Bill, AccountDetails as Account, Todo, Priority, Goal, IncomeSource, ExpenseSource, Account as AccountEnum } from './types';
 
 export const incomeData: Income[] = [];
 

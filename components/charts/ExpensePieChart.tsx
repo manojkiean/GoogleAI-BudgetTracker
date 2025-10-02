@@ -1,12 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, Sector } from 'recharts';
-import { expenseData, PIE_CHART_COLORS, expenseSourceOptions } from '../../constants';
-import type { Currency, ExpenseSource } from '../../types';
+import { PIE_CHART_COLORS, expenseSourceOptions } from '../../constants';
+import type { Currency, Expense, ExpenseSource } from '../../types';
 import { formatCurrency, convertAmount } from '../../utils/currency';
 
 interface ExpensePieChartProps {
     currency: Currency;
     onCategoryClick: (category: ExpenseSource) => void;
+    expenses: Expense[];
 }
 
 const CustomTooltip = ({ active, payload, currency }: any) => {
@@ -41,11 +42,11 @@ const ActiveShape = (props: any) => {
     );
 };
 
-const ExpensePieChart: React.FC<ExpensePieChartProps> = ({ currency, onCategoryClick }) => {
+const ExpensePieChart: React.FC<ExpensePieChartProps> = ({ currency, onCategoryClick, expenses }) => {
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   
   const dataByCategory = useMemo(() => {
-    const spendingByCategory = expenseData.reduce((acc, expense) => {
+    const spendingByCategory = expenses.reduce((acc, expense) => {
         if (!acc[expense.category]) {
             acc[expense.category] = 0;
         }
@@ -59,7 +60,7 @@ const ExpensePieChart: React.FC<ExpensePieChartProps> = ({ currency, onCategoryC
             value: convertAmount(spendingByCategory[option.source as unknown as ExpenseSource] || 0, 'USD', currency.code),
         }))
         .filter(item => item.value > 0);
-  }, [currency]);
+  }, [currency, expenses]);
 
   const onPieEnter = (_: any, index: number) => {
     setActiveIndex(index);

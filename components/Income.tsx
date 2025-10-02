@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Currency, Income } from '../types';
-import { incomeData } from '../constants';
 import { formatCurrency, convertAmount } from '../utils/currency';
 import { CalendarIcon, CreditCardIcon } from './icons/IconComponents';
 import AddEditIncomeForm from './AddEditIncomeForm';
+import { getIncomes, addIncome, updateIncome, deleteIncome } from '../utils/api';
 
 interface IncomeProps {
   currency: Currency;
@@ -44,26 +44,30 @@ const IncomeCard: React.FC<{
 );
 
 const Income: React.FC<IncomeProps> = ({ currency }) => {
-    const [incomes, setIncomes] = useState<Income[]>(incomeData);
+    const [incomes, setIncomes] = useState<Income[]>([]);
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [editingIncome, setEditingIncome] = useState<Income | null>(null);
 
+    useEffect(() => {
+        getIncomes().then(setIncomes);
+    }, []);
+
     const handleSaveIncome = (incomeData: Omit<Income, 'id'> & { id?: number }) => {
-        if (incomeData.id) {
-            setIncomes(incomes.map(i => i.id === incomeData.id ? { ...i, ...incomeData, id: i.id } : i));
-        } else {
-            const newIncome: Income = {
-                id: Date.now(),
-                ...incomeData,
-            };
-            setIncomes([newIncome, ...incomes]);
-        }
-        setIsFormVisible(false);
-        setEditingIncome(null);
+        const promise = incomeData.id
+            ? updateIncome({ ...incomeData, id: incomeData.id } as Income)
+            : addIncome(incomeData as Omit<Income, 'id'>);
+
+        promise.then(() => {
+            getIncomes().then(setIncomes);
+            setIsFormVisible(false);
+            setEditingIncome(null);
+        });
     };
 
     const handleDeleteIncome = (id: number) => {
-        setIncomes(incomes.filter(i => i.id !== id));
+        deleteIncome(id).then(() => {
+            setIncomes(incomes.filter(i => i.id !== id));
+        });
     };
 
     const handleEditClick = (income: Income) => {
