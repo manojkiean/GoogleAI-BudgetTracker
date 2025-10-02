@@ -76,13 +76,14 @@ const BudgetBarChart: React.FC<BudgetBarChartProps> = ({ currency, onCategoryCli
 
 // A helper inside this file since it's chart-specific formatting
 const formatCurrency = (amount: number, currency: Currency, compact = false): string => {
-  return new Intl.NumberFormat('en-US', {
+  const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currency.code,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
     notation: compact ? 'compact' : 'standard',
   }).format(amount);
+  return formatted.replace(currency.symbol, `${currency.symbol} `);
 };
 
 export default BudgetBarChart;

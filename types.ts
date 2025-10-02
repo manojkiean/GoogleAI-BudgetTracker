@@ -7,6 +7,7 @@ export enum Tab {
   ACCOUNTS = 'Accounts',
   TODO = 'To-Do List',
   MY_ACCOUNT = 'My Account',
+  REPORTS = 'Reports',
 }
 
 export interface Currency {

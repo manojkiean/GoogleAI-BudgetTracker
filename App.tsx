@@ -15,6 +15,7 @@ const Accounts = lazy(() => import('./components/Accounts'));
 const TodoList = lazy(() => import('./components/TodoList'));
 const Login = lazy(() => import('./components/Login'));
 const MyAccount = lazy(() => import('./components/MyAccount'));
+const Reports = lazy(() => import('./components/Reports'));
 
 const currencies: Currency[] = [
   { symbol: '$', code: 'USD' },
@@ -94,6 +95,7 @@ const App: React.FC = () => {
       [Tab.SUBSCRIPTIONS]: <Subscriptions currency={currency} subscriptions={subscriptions} onUpdateSubscriptions={updateSubscriptions} />,
       [Tab.GOALS]: <Goals currency={currency} />,
       [Tab.ACCOUNTS]: <Accounts currency={currency} />,
+      [Tab.REPORTS]: <Reports />,
       [Tab.TODO]: <TodoList todos={todos} onUpdateTodos={updateTodos} />,
       [Tab.MY_ACCOUNT]: <MyAccount user={currentUser} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />,
     };

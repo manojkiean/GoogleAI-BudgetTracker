@@ -102,7 +102,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
                     <span className="text-white font-medium sm:col-span-1">{sub.service}</span>
                     <span className="text-gray-400 text-right sm:text-center">{sub.frequency}</span>
                     <span className="text-gray-400 sm:text-center">Next: {formatDate(sub.nextPayment)}</span>
-                    <span className="text-red-400 font-semibold text-right">{currency.symbol}{sub.amount}</span>
+                    <span className="text-red-400 font-semibold text-right">{currency.symbol} {sub.amount.toFixed(2)}</span>
                 </li>
             ))}
         </ul>

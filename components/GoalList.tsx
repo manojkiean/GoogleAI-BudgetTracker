@@ -21,7 +21,7 @@ const GoalList: React.FC<GoalListProps> = ({ goals, currency, onEdit, onDelete, 
         <div key={goal.id} className="bg-gray-800 p-4 rounded-lg">
           <div className="flex justify-between items-center">
             <span className="text-white font-medium">{goal.category}</span>
-            <span className="text-white">{currency.symbol}{goal.amount} / {currency.symbol}{goal.goalAmount}</span>
+            <span className="text-white">{currency.symbol} {goal.amount} / {currency.symbol} {goal.goalAmount}</span>
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2.5 mt-2">
             <div
