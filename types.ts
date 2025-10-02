@@ -3,7 +3,7 @@ export enum Tab {
   INCOME = 'Income',
   EXPENSES = 'Expenses',
   SUBSCRIPTIONS = 'Subscriptions',
-  BILLS = 'Bills',
+  GOALS = 'Goals',
   ACCOUNTS = 'Accounts',
   TODO = 'To-Do List',
 }
@@ -38,15 +38,16 @@ export interface Subscription {
   frequency: 'Monthly' | 'Yearly';
   nextPayment: string;
   status: 'Active' | 'Cancelled';
+  subscriptionType: 'Recurring' | 'One Off';
+  renewalDate?: string;
 }
 
-export interface Bill {
-  id: number;
-  name: string;
-  dueDate: string;
-  amount: number;
-  category: string;
-  status: 'Pending' | 'Paid';
+export interface GoalDetails {
+    id: number;
+    category: string;
+    amount: number;
+    goalAmount: number;
+    type: 'Income' | 'Expense';
 }
 
 export interface AccountDetails {
@@ -69,6 +70,14 @@ export interface Todo {
   priority: Priority;
   dueDate: string;
   completed: boolean;
+}
+
+export interface Bill {
+  id: number;
+  name: string;
+  amount: number;
+  dueDate: string;
+  isPaid: boolean;
 }
 
 export enum Goal {

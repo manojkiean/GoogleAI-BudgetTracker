@@ -4,9 +4,12 @@ import type { Currency, Subscription } from '../types';
 import { formatCurrency, convertAmount } from '../utils/currency';
 import AddEditSubscriptionForm from './AddEditSubscriptionForm';
 import { getSubscriptions, addSubscription, updateSubscription, deleteSubscription } from '../utils/api';
+import { CalendarIcon, CreditCardIcon, BillsIcon, EuroIcon } from './icons/IconComponents';
+import ServiceIcon from './icons/ServiceIcon';
 
 interface SubscriptionsProps {
   currency: Currency;
+  isDashboard?: boolean;
 }
 
 const SubscriptionCard: React.FC<{ 
@@ -18,16 +21,16 @@ const SubscriptionCard: React.FC<{
     <div className="bg-gray-800 p-5 rounded-xl shadow-lg flex flex-col justify-between">
         <div className="flex justify-between items-start">
             <div>
-                <p className="text-lg font-semibold">{subscription.service}</p>
-                <p className="text-sm text-gray-400">Next payment: {new Date(subscription.nextPayment).toLocaleDateString()}</p>
+                <p className="text-lg font-semibold flex items-center"><ServiceIcon serviceName={subscription.service} /> <span className="ml-2">{subscription.service}</span></p>
+                <p className="text-sm text-gray-400 flex items-center mt-2"><CalendarIcon /> <span className="ml-2">Next payment: {new Date(subscription.nextPayment).toLocaleDateString()}</span></p>
                 <span className={`text-xs font-semibold px-2 py-1 rounded-full mt-2 inline-block ${subscription.status === 'Active' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                     {subscription.status}
                 </span>
             </div>
             <div className="text-right">
-                <p className="text-xl font-bold">
+                <p className="text-xl font-bold flex items-center"><CreditCardIcon /> <span className="ml-2">
                     {formatCurrency(convertAmount(subscription.amount, 'USD', currency.code), currency)}
-                </p>
+                </span></p>
                 <p className="text-sm text-gray-400">/{subscription.frequency === 'Monthly' ? 'Mo' : 'Yr'}</p>
             </div>
         </div>
@@ -38,7 +41,7 @@ const SubscriptionCard: React.FC<{
     </div>
 );
 
-const Subscriptions: React.FC<SubscriptionsProps> = ({ currency }) => {
+const Subscriptions: React.FC<SubscriptionsProps> = ({ currency, isDashboard = false }) => {
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [editingSubscription, setEditingSubscription] = useState<Subscription | null>(null);
@@ -89,23 +92,25 @@ const Subscriptions: React.FC<SubscriptionsProps> = ({ currency }) => {
 
   return (
     <section aria-labelledby="subscriptions-heading">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <h2 id="subscriptions-heading" className="text-2xl font-bold mb-2 sm:mb-0">Subscriptions</h2>
-            <div className="flex items-center space-x-4">
-                <div className="bg-gray-700 p-3 rounded-lg text-center">
-                    <p className="text-sm text-gray-400">Total Monthly Cost</p>
-                    <p className="text-xl font-semibold text-white">{formatCurrency(totalMonthlyCost, currency)}</p>
+        {!isDashboard && (
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <h2 id="subscriptions-heading" className="text-2xl font-bold mb-2 sm:mb-0">Subscriptions</h2>
+                <div className="flex items-center space-x-4">
+                    <div className="bg-gray-700 p-3 rounded-lg text-center">
+                        <p className="text-sm text-gray-400">Total Monthly Cost</p>
+                        <p className="text-xl font-semibold text-white flex items-center"><EuroIcon /> <span className="ml-2">{formatCurrency(totalMonthlyCost, currency)}</span></p>
+                    </div>
+                    {!isFormVisible && (
+                        <button 
+                            onClick={handleAddClick}
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity duration-300"
+                        >
+                            Add Subscription
+                        </button>
+                    )}
                 </div>
-                {!isFormVisible && (
-                    <button 
-                        onClick={handleAddClick}
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity duration-300"
-                    >
-                        Add Subscription
-                    </button>
-                )}
             </div>
-        </div>
+        )}
 
         {isFormVisible && (
             <AddEditSubscriptionForm 
@@ -115,7 +120,7 @@ const Subscriptions: React.FC<SubscriptionsProps> = ({ currency }) => {
             />
         )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-6 mb-24 lg:mb-0">
+      <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-6 mb-24 lg:mb-0 ${isDashboard ? 'max-h-96 overflow-y-auto' : ''}`}>
         {subscriptions.map((sub) => (
           <SubscriptionCard 
             key={sub.id} 

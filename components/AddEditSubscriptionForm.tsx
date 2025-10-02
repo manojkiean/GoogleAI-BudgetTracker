@@ -13,6 +13,8 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
   const [amount, setAmount] = useState('');
   const [frequency, setFrequency] = useState<'Monthly' | 'Yearly'>('Monthly');
   const [nextPayment, setNextPayment] = useState(new Date().toISOString().split('T')[0]);
+  const [subscriptionType, setSubscriptionType] = useState<'Recurring' | 'One Off'>('Recurring');
+  const [renewalDate, setRenewalDate] = useState('');
 
   useEffect(() => {
     if (subscription) {
@@ -20,8 +22,27 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
       setAmount(String(subscription.amount));
       setFrequency(subscription.frequency);
       setNextPayment(new Date(subscription.nextPayment).toISOString().split('T')[0]);
+      setSubscriptionType(subscription.subscriptionType || 'Recurring');
     }
   }, [subscription]);
+
+  useEffect(() => {
+    const calculateRenewalDate = () => {
+      const paymentDate = new Date(nextPayment);
+      if (subscriptionType === 'Recurring') {
+        if (frequency === 'Monthly') {
+          paymentDate.setMonth(paymentDate.getMonth() + 1);
+        } else if (frequency === 'Yearly') {
+          paymentDate.setFullYear(paymentDate.getFullYear() + 1);
+        }
+      } 
+      setRenewalDate(paymentDate.toISOString().split('T')[0]);
+    };
+
+    if(nextPayment) {
+        calculateRenewalDate();
+    }
+  }, [frequency, nextPayment, subscriptionType]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +54,8 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
       frequency,
       nextPayment,
       status: subscription?.status || 'Active',
+      subscriptionType,
+      renewalDate,
     });
   };
 
@@ -80,6 +103,20 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
                 </select>
             </div>
             <div>
+                <label htmlFor="subscriptionType" className="block text-sm font-medium text-gray-300 mb-2">Subscription Type</label>
+                <select 
+                    id="subscriptionType"
+                    value={subscriptionType}
+                    onChange={(e) => setSubscriptionType(e.target.value as 'Recurring' | 'One Off')}
+                    className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                >
+                    <option value="Recurring">Recurring</option>
+                    <option value="One Off">One Off</option>
+                </select>
+            </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div>
                 <label htmlFor="nextPayment" className="block text-sm font-medium text-gray-300 mb-2">Next Payment</label>
                 <input 
                     type="date"
@@ -89,6 +126,16 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
                     onFocus={(e) => (e.currentTarget as any).showPicker()}
                     className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
                     required
+                />
+            </div>
+            <div>
+                <label htmlFor="renewalDate" className="block text-sm font-medium text-gray-300 mb-2">Renewal Date</label>
+                <input 
+                    type="date"
+                    id="renewalDate"
+                    value={renewalDate}
+                    className="bg-gray-900 border border-gray-700 text-gray-400 text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
+                    disabled
                 />
             </div>
         </div>

@@ -1,23 +1,24 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, lazy, Suspense } from 'react';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
-import Dashboard from './components/Dashboard';
-import Income from './components/Income';
-import Expenses from './components/Expenses';
-import Subscriptions from './components/Subscriptions';
-import Bills from './components/Bills';
-import Accounts from './components/Accounts';
-import TodoList from './components/TodoList';
-import { Currency, Tab, ExpenseCategory } from './types';
+import { Currency, Tab, ExpenseSource } from './types';
+
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const Income = lazy(() => import('./components/Income'));
+const Expenses = lazy(() => import('./components/Expenses'));
+const Subscriptions = lazy(() => import('./components/Subscriptions'));
+const Goals = lazy(() => import('./components/Goals'));
+const Accounts = lazy(() => import('./components/Accounts'));
+const TodoList = lazy(() => import('./components/TodoList'));
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>(Tab.DASHBOARD);
   const [currency, setCurrency] = useState<Currency>({ symbol: '$', code: 'USD' });
-  const [expenseFilter, setExpenseFilter] = useState<ExpenseCategory | null>(null);
+  const [expenseFilter, setExpenseFilter] = useState<ExpenseSource | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const handleCategorySelect = useCallback((category: ExpenseCategory) => {
+  const handleCategorySelect = useCallback((category: ExpenseSource) => {
     setExpenseFilter(category);
     setActiveTab(Tab.EXPENSES);
   }, []);
@@ -43,7 +44,7 @@ const App: React.FC = () => {
       [Tab.INCOME]: <Income currency={currency} />,
       [Tab.EXPENSES]: <Expenses currency={currency} filter={expenseFilter} onClearFilter={clearExpenseFilter} />,
       [Tab.SUBSCRIPTIONS]: <Subscriptions currency={currency} />,
-      [Tab.BILLS]: <Bills currency={currency} />,
+      [Tab.GOALS]: <Goals currency={currency} />,
       [Tab.ACCOUNTS]: <Accounts currency={currency} />,
       [Tab.TODO]: <TodoList />,
     };
@@ -56,7 +57,9 @@ const App: React.FC = () => {
       <main className={`flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64 xl:ml-72' : 'lg:ml-20'}`}>
         <Header currency={currency} setCurrency={setCurrency} toggleSidebar={toggleSidebar} />
         <div className="mt-8 animate-fade-in">
-          {renderContent()}
+          <Suspense fallback={<div className="flex justify-center items-center h-full"><div className="text-white text-xl">Loading...</div></div>}>
+            {renderContent()}
+          </Suspense>
         </div>
       </main>
     </div>

@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { ExpenseSource } from '../types';
-import type { Currency, Expense, Account } from '../types';
+import type { Currency, Expense } from '../types';
 import { formatCurrency, convertAmount } from '../utils/currency';
-import { CalendarIcon, CreditCardIcon } from './icons/IconComponents';
+import { formatDate } from '../utils/date';
+import { CalendarIcon, CreditCardIcon, ExpensesIcon } from './icons/IconComponents';
 import AddEditExpenseForm from './AddEditExpenseForm';
 import { getExpenses, addExpense, updateExpense, deleteExpense } from '../utils/api';
 
@@ -11,7 +12,25 @@ interface ExpensesProps {
   currency: Currency;
   filter: ExpenseSource | null;
   onClearFilter: () => void;
+  isDashboard?: boolean;
 }
+
+const categoryIcons: Record<ExpenseSource, React.ReactElement> = {
+    [ExpenseSource.RENT]: <ExpensesIcon />,
+    [ExpenseSource.BILLS]: <ExpensesIcon />,
+    [ExpenseSource.FOOD]: <ExpensesIcon />,
+    [ExpenseSource.TRANSPORTATION]: <ExpensesIcon />,
+    [ExpenseSource.GADGETS]: <ExpensesIcon />,
+    [ExpenseSource.OTHER]: <ExpensesIcon />,
+    [ExpenseSource.PIGGY_POT]: <ExpensesIcon />,
+    [ExpenseSource.PERSONAL_CARE]: <ExpensesIcon />,
+    [ExpenseSource.BUYING_CAR]: <ExpensesIcon />,
+    [ExpenseSource.HOLIDAYS]: <ExpensesIcon />,
+    [ExpenseSource.NETFLIX]: <ExpensesIcon />,
+    [ExpenseSource.COUNCIL_TAX]: <ExpensesIcon />,
+    [ExpenseSource.AMAZON_PRIME]: <ExpensesIcon />,
+    [ExpenseSource.INSURANCE]: <ExpensesIcon />,
+};
 
 const categoryColors: Record<ExpenseSource, string> = {
     [ExpenseSource.RENT]: 'border-red-500',
@@ -49,7 +68,7 @@ const ExpenseCard: React.FC<{
         <div className="flex justify-between items-center mt-4 text-xs text-gray-500">
             <div className="flex items-center">
                 <CalendarIcon />
-                <span className="ml-1">{new Date(expense.date).toLocaleDateString()}</span>
+                <span className="ml-1">{formatDate(expense.date)}</span>
             </div>
             <div className="flex items-center">
                 <CreditCardIcon />
@@ -63,7 +82,22 @@ const ExpenseCard: React.FC<{
     </div>
 );
 
-const Expenses: React.FC<ExpensesProps> = ({ currency, filter, onClearFilter }) => {
+const ExpenseList: React.FC<{ expenses: Expense[]; currency: Currency }> = ({ expenses, currency }) => (
+    <ul className="space-y-4">
+        {expenses.map(expense => (
+            <li key={expense.id} className="grid grid-cols-3 items-center bg-gray-800 p-4 rounded-lg">
+                <div className="flex items-center">
+                    {categoryIcons[expense.category] || <ExpensesIcon />}
+                    <span className="text-white font-medium ml-2">{expense.category}</span>
+                </div>
+                <span className="text-gray-400 text-sm text-center">{expense.account}</span>
+                <span className="text-red-400 font-semibold text-right">{formatCurrency(convertAmount(expense.amount, 'USD', currency.code), currency)}</span>
+            </li>
+        ))}
+    </ul>
+);
+
+const Expenses: React.FC<ExpensesProps> = ({ currency, filter, onClearFilter, isDashboard = false }) => {
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -108,6 +142,10 @@ const Expenses: React.FC<ExpensesProps> = ({ currency, filter, onClearFilter }) 
     const filteredExpenses = (filter ? expenses.filter(e => e.category === filter) : expenses)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+    if (isDashboard) {
+        return <ExpenseList expenses={filteredExpenses} currency={currency} />;
+    }
+
     return (
         <section aria-labelledby="expenses-heading">
             <div className="flex justify-between items-center mb-6">
@@ -143,7 +181,7 @@ const Expenses: React.FC<ExpensesProps> = ({ currency, filter, onClearFilter }) 
                     </button>
                 </div>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6 mb-24 lg:mb-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 mb-24 lg:mb-0">
                 {filteredExpenses.map((expense) => (
                     <ExpenseCard 
                         key={expense.id} 

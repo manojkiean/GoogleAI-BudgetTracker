@@ -11,7 +11,7 @@
     { "id": 1, "service": "Netflix", "amount": 15.99, "frequency": "Monthly", "nextPayment": "2024-02-01", "status": "Active" },
     { "id": 2, "service": "Spotify", "amount": 9.99, "frequency": "Monthly", "nextPayment": "2024-02-05", "status": "Active" }
   ],
-  "bills": [
+   "bills": [
     { "id": 1, "name": "Rent", "dueDate": "2024-02-01", "amount": 1200, "category": "Rent or Mortgage", "status": "Pending" },
     { "id": 2, "name": "Car Insurance", "dueDate": "2024-02-10", "amount": 100, "category": "Insurance", "status": "Pending" }
   ],
@@ -23,5 +23,6 @@
     { "id": 1, "task": "Pay rent", "priority": "High", "dueDate": "2024-07-28", "completed": false },
     { "id": 2, "task": "File taxes", "priority": "Medium", "dueDate": "2024-07-29", "completed": false },
     { "id": 3, "task": "Call the electrician", "priority": "Low", "dueDate": "2024-07-30", "completed": false }
-  ]
+  ],
+  "goals": []
 }

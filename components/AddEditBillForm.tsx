@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Bill, ExpenseCategory } from '../types';
+import { Bill, ExpenseSource } from '../types';
 
 interface AddEditBillFormProps {
   bill?: Bill | null;
@@ -12,14 +12,14 @@ const AddEditBillForm: React.FC<AddEditBillFormProps> = ({ bill, onSave, onCance
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
-  const [category, setCategory] = useState<ExpenseCategory>(ExpenseCategory.Utilities);
+  const [category, setCategory] = useState<ExpenseSource>(ExpenseSource.BILLS);
 
   useEffect(() => {
     if (bill) {
       setName(bill.name);
       setAmount(String(bill.amount));
       setDueDate(new Date(bill.dueDate).toISOString().split('T')[0]);
-      setCategory(bill.category as ExpenseCategory);
+      setCategory(bill.category as ExpenseSource);
     }
   }, [bill]);
 
@@ -84,10 +84,10 @@ const AddEditBillForm: React.FC<AddEditBillFormProps> = ({ bill, onSave, onCance
                 <select 
                     id="category"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
+                    onChange={(e) => setCategory(e.target.value as ExpenseSource)}
                     className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
                 >
-                    {Object.values(ExpenseCategory).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    {Object.values(ExpenseSource).map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
             </div>
         </div>

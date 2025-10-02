@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { Currency } from '../types';
 import { CurrencyIcon, MenuIcon } from './icons/IconComponents';
@@ -25,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({ currency, setCurrency, toggleSidebar })
   return (
     <header className="flex justify-between items-center">
       <div className="flex items-center">
-        <button onClick={toggleSidebar} className="lg:hidden mr-4">
+        <button onClick={toggleSidebar} className="mr-4 text-gray-400 hover:text-white focus:outline-none">
           <MenuIcon />
         </button>
         <h1 className="text-2xl sm:text-3xl font-bold text-white">Zenith Budget</h1>

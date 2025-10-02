@@ -2,20 +2,32 @@
 import React, { useState, useEffect } from 'react';
 import type { Currency, Income } from '../types';
 import { formatCurrency, convertAmount } from '../utils/currency';
-import { CalendarIcon, CreditCardIcon } from './icons/IconComponents';
+import { formatDate } from '../utils/date';
+import { CalendarIcon, CreditCardIcon, IncomeIcon } from './icons/IconComponents';
 import AddEditIncomeForm from './AddEditIncomeForm';
 import { getIncomes, addIncome, updateIncome, deleteIncome } from '../utils/api';
 
 interface IncomeProps {
   currency: Currency;
+  isDashboard?: boolean;
 }
+
+const categoryIcons: Record<string, React.ReactElement> = {
+    'Salary': <IncomeIcon />,
+    'Gifts': <IncomeIcon />,
+    'Dividends': <IncomeIcon />,
+    'Rental': <IncomeIcon />,
+    'Bonus': <IncomeIcon />,
+    'Other': <IncomeIcon />,
+};
 
 const IncomeCard: React.FC<{ 
     income: Income; 
     currency: Currency;
     onEdit: (income: Income) => void;
     onDelete: (id: number) => void;
-}> = ({ income, currency, onEdit, onDelete }) => (
+    isDashboard?: boolean;
+}> = ({ income, currency, onEdit, onDelete, isDashboard }) => (
     <div className="bg-gray-800 p-5 rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300">
         <div className="flex justify-between items-start">
             <div>
@@ -29,7 +41,7 @@ const IncomeCard: React.FC<{
         <div className="mt-4 pt-4 border-t border-gray-700 flex justify-between text-sm text-gray-400">
             <div className="flex items-center">
                 <CalendarIcon />
-                <span className="ml-2">{new Date(income.date).toLocaleDateString()}</span>
+                <span className="ml-2">{formatDate(income.date)}</span>
             </div>
             <div className="flex items-center">
                 <CreditCardIcon />
@@ -43,7 +55,22 @@ const IncomeCard: React.FC<{
     </div>
 );
 
-const Income: React.FC<IncomeProps> = ({ currency }) => {
+const IncomeList: React.FC<{ incomes: Income[]; currency: Currency }> = ({ incomes, currency }) => (
+    <ul className="space-y-4">
+        {incomes.map(income => (
+            <li key={income.id} className="grid grid-cols-3 items-center bg-gray-800 p-4 rounded-lg">
+                <div className="flex items-center">
+                    {categoryIcons[income.category] || <IncomeIcon />}
+                    <span className="text-white font-medium ml-2">{income.category}</span>
+                </div>
+                <span className="text-gray-400 text-sm text-center">{income.account}</span>
+                <span className="text-green-400 font-semibold text-right">{formatCurrency(convertAmount(income.amount, 'USD', currency.code), currency)}</span>
+            </li>
+        ))}
+    </ul>
+);
+
+const Income: React.FC<IncomeProps> = ({ currency, isDashboard = false }) => {
     const [incomes, setIncomes] = useState<Income[]>([]);
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [editingIncome, setEditingIncome] = useState<Income | null>(null);
@@ -85,6 +112,10 @@ const Income: React.FC<IncomeProps> = ({ currency }) => {
         setEditingIncome(null);
     };
 
+    if (isDashboard) {
+        return <IncomeList incomes={incomes} currency={currency} />;
+    }
+
     return (
         <section aria-labelledby="income-heading">
             <div className="flex justify-between items-center mb-6">
@@ -107,7 +138,7 @@ const Income: React.FC<IncomeProps> = ({ currency }) => {
                 />
             )}
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6 mb-24 lg:mb-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 mb-24 lg:mb-0">
                 {incomes.map((income) => (
                     <IncomeCard 
                         key={income.id} 

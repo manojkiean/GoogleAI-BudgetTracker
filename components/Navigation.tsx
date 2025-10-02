@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tab } from '../types';
-import { DashboardIcon, IncomeIcon, ExpensesIcon, SubscriptionsIcon, BillsIcon, AccountsIcon, TodoIcon } from './icons/IconComponents';
+import { DashboardIcon, IncomeIcon, ExpensesIcon, SubscriptionsIcon, GoalIcon, AccountsIcon, TodoIcon } from './icons/IconComponents';
 
 interface NavigationProps {
   activeTab: Tab;
@@ -13,7 +13,7 @@ const navItems: { tab: Tab; icon: React.ReactNode }[] = [
   { tab: Tab.INCOME, icon: <IncomeIcon /> },
   { tab: Tab.EXPENSES, icon: <ExpensesIcon /> },
   { tab: Tab.SUBSCRIPTIONS, icon: <SubscriptionsIcon /> },
-  { tab: Tab.BILLS, icon: <BillsIcon /> },
+  { tab: Tab.GOALS, icon: <GoalIcon /> },
   { tab: Tab.ACCOUNTS, icon: <AccountsIcon /> },
   { tab: Tab.TODO, icon: <TodoIcon /> },
 ];
