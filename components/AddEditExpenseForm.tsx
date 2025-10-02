@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { ExpenseSource, Account } from '../types';
+import { ExpenseSource, Account, Goal } from '../types';
 import type { Expense } from '../types';
+import { expenseSourceOptions } from '../constants';
 
 interface AddEditExpenseFormProps {
   expense: Expense | null;
@@ -58,7 +59,7 @@ const AddEditExpenseForm: React.FC<AddEditExpenseFormProps> = ({ expense, onSave
                 <div>
                     <label htmlFor="category" className="block text-sm font-medium text-gray-300">Category</label>
                     <select id="category" value={category} onChange={(e) => setCategory(e.target.value as ExpenseSource)} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mt-1 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
-                        {Object.values(ExpenseSource).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        {expenseSourceOptions.filter(s => s.goal === Goal.EXPENSES).map(s => <option key={s.source} value={s.source}>{s.source}</option>)}
                     </select>
                 </div>
                 <div>

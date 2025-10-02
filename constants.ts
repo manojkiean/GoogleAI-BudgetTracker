@@ -32,7 +32,10 @@ export const incomeGoalData: Record<IncomeSource, number> = {
     [IncomeSource.BANKING]: 0,
 };
 
-export const subscriptionData: Subscription[] = [];
+export const subscriptionData: Subscription[] = [
+    { id: 1, service: ExpenseSource.NETFLIX, amount: 15.99, frequency: 'Monthly', nextPayment: '2024-02-01', status: 'Active', subscriptionType: 'Recurring', renewalDate: '2024-03-01' },
+    { id: 2, service: ExpenseSource.AMAZON_PRIME, amount: 9.99, frequency: 'Monthly', nextPayment: '2024-02-05', status: 'Active', subscriptionType: 'Recurring', renewalDate: '2024-03-05' },
+];
 
 export const billData: Bill[] = [];
 

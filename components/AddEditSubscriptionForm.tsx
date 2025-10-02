@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Subscription } from '../types';
+import { Subscription, Goal, ExpenseSource } from '../types';
+import { expenseSourceOptions } from '../constants';
 
 interface AddEditSubscriptionFormProps {
   subscription?: Subscription | null;
@@ -9,7 +10,7 @@ interface AddEditSubscriptionFormProps {
 }
 
 const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subscription, onSave, onCancel }) => {
-  const [service, setService] = useState('');
+  const [service, setService] = useState<ExpenseSource>(expenseSourceOptions.filter(s => s.goal === Goal.SUBSCRIPTIONS)[0].source);
   const [amount, setAmount] = useState('');
   const [frequency, setFrequency] = useState<'Monthly' | 'Yearly'>('Monthly');
   const [nextPayment, setNextPayment] = useState(new Date().toISOString().split('T')[0]);
@@ -18,7 +19,7 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
 
   useEffect(() => {
     if (subscription) {
-      setService(subscription.service);
+      setService(subscription.service as ExpenseSource);
       setAmount(String(subscription.amount));
       setFrequency(subscription.frequency);
       setNextPayment(new Date(subscription.nextPayment).toISOString().split('T')[0]);
@@ -66,15 +67,14 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label htmlFor="service" className="block text-sm font-medium text-gray-300 mb-2">Service</label>
-                <input 
-                    type="text"
+                <select 
                     id="service"
                     value={service}
-                    onChange={(e) => setService(e.target.value)}
+                    onChange={(e) => setService(e.target.value as ExpenseSource)}
                     className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
-                    placeholder='e.g., Netflix'
-                    required
-                />
+                >
+                    {expenseSourceOptions.filter(s => s.goal === Goal.SUBSCRIPTIONS).map(s => <option key={s.source} value={s.source}>{s.source}</option>)}
+                </select>
             </div>
             <div>
                 <label htmlFor="amount" className="block text-sm font-medium text-gray-300 mb-2">Amount</label>

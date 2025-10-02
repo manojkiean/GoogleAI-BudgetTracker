@@ -9,7 +9,7 @@
   ],
   "subscriptions": [
     { "id": 1, "service": "Netflix", "amount": 15.99, "frequency": "Monthly", "nextPayment": "2024-02-01", "status": "Active" },
-    { "id": 2, "service": "Spotify", "amount": 9.99, "frequency": "Monthly", "nextPayment": "2024-02-05", "status": "Active" }
+    { "id": 2, "service": "Amazon Prime", "amount": 9.99, "frequency": "Monthly", "nextPayment": "2024-02-05", "status": "Active" }
   ],
    "bills": [
     { "id": 1, "name": "Rent", "dueDate": "2024-02-01", "amount": 1200, "category": "Rent or Mortgage", "status": "Pending" },

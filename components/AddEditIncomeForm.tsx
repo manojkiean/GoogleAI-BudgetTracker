@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Income, Account, IncomeSource } from '../types';
+import { Income, Account, IncomeSource, Goal } from '../types';
 import { incomeSourceOptions } from '../constants';
 
 interface AddEditIncomeFormProps {
@@ -78,7 +78,7 @@ const AddEditIncomeForm: React.FC<AddEditIncomeFormProps> = ({ income, onSave, o
                     onChange={(e) => setCategory(e.target.value as IncomeSource)}
                     className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
                 >
-                    {incomeSourceOptions.map(s => <option key={s.source} value={s.source}>{s.source}</option>)}
+                    {incomeSourceOptions.filter(s => s.goal === Goal.NONE).map(s => <option key={s.source} value={s.source}>{s.source}</option>)}
                 </select>
             </div>
             <div>
