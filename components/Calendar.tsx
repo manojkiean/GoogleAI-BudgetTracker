@@ -1,9 +1,9 @@
 
 import React, { useState } from 'react';
-import { Subscription, Todo } from '../types';
+import { Transaction, Todo } from '../types';
 
 interface CalendarProps {
-  subscriptions: Subscription[];
+  subscriptions: Transaction[];
   todos: Todo[];
 }
 
@@ -56,7 +56,7 @@ const Calendar: React.FC<CalendarProps> = ({ subscriptions, todos }) => {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       const isToday = date.toDateString() === new Date().toDateString();
-      const subscriptionEvents = subscriptions.filter(s => new Date(s.nextPayment).toDateString() === date.toDateString());
+      const subscriptionEvents = subscriptions.filter(s => new Date(s.renewalDate).toDateString() === date.toDateString());
       const todoEvents = todos.filter(t => new Date(t.dueDate).toDateString() === date.toDateString());
 
       cells.push(
@@ -64,7 +64,7 @@ const Calendar: React.FC<CalendarProps> = ({ subscriptions, todos }) => {
           <span className={`font-bold ${isToday ? 'text-white' : 'text-gray-200'}`}>{day}</span>
           <div className="flex-grow overflow-y-auto">
             {subscriptionEvents.map(s => (
-              <div key={`sub-${s.id}`} className="text-xs bg-red-500 text-white p-1 rounded-md mb-1">{s.service}</div>
+              <div key={`sub-${s.id}`} className="text-xs bg-red-500 text-white p-1 rounded-md mb-1">{s.source}</div>
             ))}
             {todoEvents.map(t => (
               <div key={`todo-${t.id}`} className="text-xs bg-green-500 text-white p-1 rounded-md mb-1">{t.task}</div>

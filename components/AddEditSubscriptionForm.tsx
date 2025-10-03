@@ -1,161 +1,159 @@
 
 import React, { useState, useEffect } from 'react';
-import { Subscription, Goal, ExpenseSource } from '../types';
+import { Transaction, Account, ExpenseSource, Goal, TransactionType } from '../types';
 import { expenseSourceOptions } from '../constants';
+import TransactionList from './TransactionList';
 
 interface AddEditSubscriptionFormProps {
-  subscription?: Subscription | null;
-  onSave: (subscription: Omit<Subscription, 'id'> & { id?: number }) => void;
+  subscription?: Transaction | null;
+  transactions: Transaction[];
+  onSave: (subscription: Omit<Transaction, 'id'> & { id?: number }) => Promise<boolean>;
   onCancel: () => void;
+  onDelete: (id: number) => void;
+  onEdit: (subscription: Transaction) => void;
 }
 
-const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subscription, onSave, onCancel }) => {
-  const [service, setService] = useState<ExpenseSource>(expenseSourceOptions.filter(s => s.goal === Goal.SUBSCRIPTIONS)[0].source);
+const subscriptionSourceOptions = expenseSourceOptions.filter(s => s.goal === Goal.SUBSCRIPTIONS);
+
+const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subscription, transactions, onSave, onCancel, onDelete, onEdit }) => {
+  const [source, setSource] = useState<ExpenseSource | ''>('');
   const [amount, setAmount] = useState('');
-  const [frequency, setFrequency] = useState<'Monthly' | 'Yearly'>('Monthly');
-  const [nextPayment, setNextPayment] = useState(new Date().toISOString().split('T')[0]);
-  const [subscriptionType, setSubscriptionType] = useState<'Recurring' | 'One Off'>('Recurring');
-  const [renewalDate, setRenewalDate] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [account, setAccount] = useState<Account>(Account.HSBC);
+  const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+  const [subscriptionTransactions, setSubscriptionTransactions] = useState<Transaction[]>([]);
+
+  const resetForm = () => {
+    setSource(subscriptionSourceOptions.length > 0 ? subscriptionSourceOptions[0].source : '');
+    setAmount('');
+    setDate(new Date().toISOString().split('T')[0]);
+    setAccount(Account.HSBC);
+  };
 
   useEffect(() => {
     if (subscription) {
-      setService(subscription.service as ExpenseSource);
+      setSource(subscription.source as ExpenseSource);
       setAmount(String(subscription.amount));
-      setFrequency(subscription.frequency);
-      setNextPayment(new Date(subscription.nextPayment).toISOString().split('T')[0]);
-      setSubscriptionType(subscription.subscriptionType || 'Recurring');
+      setDate(new Date(subscription.date).toISOString().split('T')[0]);
+      setAccount(subscription.account as Account);
+    } else {
+      resetForm();
     }
+    // Clear message when the form is reset or a new item is being edited
+    setMessage(null);
   }, [subscription]);
 
   useEffect(() => {
-    const calculateRenewalDate = () => {
-      const paymentDate = new Date(nextPayment);
-      if (subscriptionType === 'Recurring') {
-        if (frequency === 'Monthly') {
-          paymentDate.setMonth(paymentDate.getMonth() + 1);
-        } else if (frequency === 'Yearly') {
-          paymentDate.setFullYear(paymentDate.getFullYear() + 1);
-        }
-      } 
-      setRenewalDate(paymentDate.toISOString().split('T')[0]);
-    };
+    setSubscriptionTransactions(transactions.filter(t => t.type === TransactionType.SUBSCRIPTION));
+  }, [transactions]);
 
-    if(nextPayment) {
-        calculateRenewalDate();
-    }
-  }, [frequency, nextPayment, subscriptionType]);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!service || !amount || isNaN(parseFloat(amount))) return;
-    onSave({
+    if (!source || !amount || isNaN(parseFloat(amount))) return;
+    
+    const success = await onSave({
       id: subscription?.id,
-      service,
+      source,
       amount: parseFloat(amount),
-      frequency,
-      nextPayment,
-      status: subscription?.status || 'Active',
-      subscriptionType,
-      renewalDate,
+      date,
+      account,
+      category: source as ExpenseSource,
+      type: TransactionType.SUBSCRIPTION,
     });
+
+    if (success) {
+      setMessage({ text: 'Subscription saved successfully!', type: 'success' });
+      if (!subscription) {
+        resetForm(); // Reset form only when adding a new item
+      }
+    } else {
+      setMessage({ text: 'Failed to save subscription.', type: 'error' });
+    }
+  };
+
+  const handleCancel = () => {
+    setMessage(null);
+    onCancel();
   };
 
   return (
-    <div className="bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in mt-6">
-      <h3 className="text-xl font-semibold text-white mb-4">{subscription ? 'Edit Subscription' : 'Add Subscription'}</h3>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label htmlFor="service" className="block text-sm font-medium text-gray-300 mb-2">Service</label>
-                <select 
-                    id="service"
-                    value={service}
-                    onChange={(e) => setService(e.target.value as ExpenseSource)}
-                    className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
-                >
-                    {expenseSourceOptions.filter(s => s.goal === Goal.SUBSCRIPTIONS).map(s => <option key={s.source} value={s.source}>{s.source}</option>)}
-                </select>
+    <>
+      <div className="bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in mt-6">
+        <h3 className="text-xl font-semibold text-white mb-4">{subscription ? 'Edit Subscription' : 'Add Subscription'}</h3>
+        {message && (
+            <div className={`p-4 mb-4 text-sm rounded-lg ${message.type === 'success' ? 'bg-green-800 text-green-200' : 'bg-red-800 text-red-200'}`}>
+                {message.text}
             </div>
-            <div>
-                <label htmlFor="amount" className="block text-sm font-medium text-gray-300 mb-2">Amount</label>
-                <input 
-                    type="number"
-                    id="amount"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
-                    placeholder='9.99'
-                    required
-                />
+        )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label htmlFor="source" className="block text-sm font-medium text-gray-300 mb-2">Subscription Item</label>
+                    <select 
+                        id="source"
+                        value={source}
+                        onChange={(e) => setSource(e.target.value as ExpenseSource)}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                    >
+                        {subscriptionSourceOptions.map(s => <option key={s.source} value={s.source}>{s.source}</option>)}
+                    </select>
+                </div>
+                <div>
+                    <label htmlFor="amount" className="block text-sm font-medium text-gray-300 mb-2">Amount</label>
+                    <input 
+                        type="number"
+                        id="amount"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                        placeholder='10'
+                        required
+                    />
+                </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
+                    <input 
+                        type="date"
+                        id="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                        required
+                    />
+                </div>
+                <div>
+                    <label htmlFor="account" className="block text-sm font-medium text-gray-300 mb-2">Account</label>
+                    <select 
+                        id="account"
+                        value={account}
+                        onChange={(e) => setAccount(e.target.value as Account)}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                    >
+                        {Object.values(Account).map(acc => <option key={acc} value={acc}>{acc}</option>)}
+                    </select>
+                </div>
+            </div>
+            <div className="flex justify-end space-x-4 pt-2">
+            <button
+                type="button"
+                onClick={handleCancel}
+                className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white"
+            >
+                Cancel
+            </button>
+            <button
+                type="submit"
+                className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity duration-300"
+            >
+                {subscription ? 'Save Changes' : 'Add Subscription'}
+            </button>
+            </div>
+        </form>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label htmlFor="frequency" className="block text-sm font-medium text-gray-300 mb-2">Frequency</label>
-                <select 
-                    id="frequency"
-                    value={frequency}
-                    onChange={(e) => setFrequency(e.target.value as 'Monthly' | 'Yearly')}
-                    className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
-                >
-                    <option value="Monthly">Monthly</option>
-                    <option value="Yearly">Yearly</option>
-                </select>
-            </div>
-            <div>
-                <label htmlFor="subscriptionType" className="block text-sm font-medium text-gray-300 mb-2">Subscription Type</label>
-                <select 
-                    id="subscriptionType"
-                    value={subscriptionType}
-                    onChange={(e) => setSubscriptionType(e.target.value as 'Recurring' | 'One Off')}
-                    className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
-                >
-                    <option value="Recurring">Recurring</option>
-                    <option value="One Off">One Off</option>
-                </select>
-            </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div>
-                <label htmlFor="nextPayment" className="block text-sm font-medium text-gray-300 mb-2">Next Payment</label>
-                <input 
-                    type="date"
-                    id="nextPayment"
-                    value={nextPayment}
-                    onChange={(e) => setNextPayment(e.target.value)}
-                    onFocus={(e) => (e.currentTarget as any).showPicker()}
-                    className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
-                    required
-                />
-            </div>
-            <div>
-                <label htmlFor="renewalDate" className="block text-sm font-medium text-gray-300 mb-2">Renewal Date</label>
-                <input 
-                    type="date"
-                    id="renewalDate"
-                    value={renewalDate}
-                    className="bg-gray-900 border border-gray-700 text-gray-400 text-sm rounded-lg block w-full p-2.5 cursor-not-allowed"
-                    disabled
-                />
-            </div>
-        </div>
-        <div className="flex justify-end space-x-4 pt-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity duration-300"
-          >
-            {subscription ? 'Save Changes' : 'Add Subscription'}
-          </button>
-        </div>
-      </form>
-    </div>
+        <TransactionList transactions={subscriptionTransactions} onEdit={onEdit} onDelete={onDelete} type={TransactionType.SUBSCRIPTION} />
+    </>
   );
 };
 

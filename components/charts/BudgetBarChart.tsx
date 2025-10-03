@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { budgetData, expenseSourceOptions } from '../../constants';
-import type { Currency, Expense, ExpenseSource } from '../../types';
+import { expenseSourceOptions } from '../../constants';
+import type { Currency, Expense, ExpenseSource, Transaction } from '../../types';
 import { convertAmount } from '../../utils/currency';
 
 interface BudgetBarChartProps {
     currency: Currency;
     onCategoryClick: (category: ExpenseSource) => void;
-    expenses: Expense[];
+    expenses: Transaction[];
 }
 
 const CustomTooltip = ({ active, payload, label, currency }: any) => {
@@ -33,6 +33,16 @@ const BudgetBarChart: React.FC<BudgetBarChartProps> = ({ currency, onCategoryCli
             acc[category] += expense.amount;
             return acc;
         }, {} as Record<ExpenseSource, number>);
+
+        const budgetData: Record<ExpenseSource, number> = {
+            'Food': 500,
+            'Bills & Utilities': 300,
+            'Transportation': 150,
+            'Entertainment': 100,
+            'Health & Wellness': 80,
+            'Shopping': 200,
+            'Other': 120,
+        };
 
         return expenseSourceOptions.map(option => {
             const category = option.source as ExpenseSource;

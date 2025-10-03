@@ -1,110 +1,64 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Account } from '../types';
-import type { Currency, AccountDetails, Income, Expense } from '../types';
-import { formatCurrency, convertAmount } from '../utils/currency';
-import { getAccounts, getIncomes, getExpenses } from '../utils/api';
+import React, { useMemo } from 'react';
+import { Transaction, AccountDetails, Currency } from '../types';
+import { convertAmount } from '../utils/currency';
 
 interface AccountsProps {
-  currency: Currency;
+    transactions: Transaction[];
+    accounts: AccountDetails[];
+    currency: Currency;
 }
 
-const Accounts: React.FC<AccountsProps> = ({ currency }) => {
-    const [accounts, setAccounts] = useState<AccountDetails[]>([]);
-    const [incomes, setIncomes] = useState<Income[]>([]);
-    const [expenses, setExpenses] = useState<Expense[]>([]);
+const Accounts: React.FC<AccountsProps> = ({ transactions, accounts, currency }) => {
+    const summarizedAccounts = useMemo(() => {
+        // 1. As you suggested, group transactions by account and sum the amounts.
+        const summaryByAccount = transactions.reduce((acc, transaction) => {
+            const { account_id, type, amount } = transaction;
 
-    useEffect(() => {
-        getAccounts().then(accountsData => {
-            const correctedAccounts = accountsData.map(account => {
-                if (account.name === Account.HSBC) {
-                    return { ...account, balance: 5000 };
-                }
-                if (account.name === Account.PAYPAL) {
-                    return { ...account, balance: 1500 };
-                }
-                return account;
-            });
-            setAccounts(correctedAccounts);
-        });
-        getIncomes().then(setIncomes);
-        getExpenses().then(setExpenses);
-    }, []);
-
-    const totalBalance = useMemo(() => accounts.reduce((acc, account) => acc + convertAmount(account.balance, 'USD', currency.code), 0), [accounts, currency.code]);
-
-    const accountSummary: Record<string, { income: number; expense: number }> = useMemo(() => {
-        const summary: Record<string, { income: number, expense: number }> = {};
-
-        Object.values(Account).forEach(accountName => {
-            summary[accountName] = {
-                income: 0,
-                expense: 0,
-            };
-        });
-
-        incomes.forEach(income => {
-            const accountName = income.account as string;
-            if (summary[accountName]) {
-                summary[accountName].income += convertAmount(income.amount, 'USD', currency.code);
+            if (!acc[account_id]) {
+                acc[account_id] = { income: 0, expense: 0 };
             }
-        });
 
-        expenses.forEach(expense => {
-            const accountName = expense.account as string;
-            if (summary[accountName]) {
-                summary[accountName].expense += convertAmount(expense.amount, 'USD', currency.code);
+            const convertedAmount = convertAmount(amount, 'USD', currency.code);
+
+            if (type === 'income') {
+                acc[account_id].income += convertedAmount;
+            } else {
+                acc[account_id].expense += convertedAmount;
             }
-        });
 
-        return summary;
-    }, [incomes, expenses, currency.code]);
+            return acc;
+        }, {} as Record<number, { income: number; expense: number }>);
 
-    const filteredAccountSummary = Object.entries(accountSummary).filter(
-        ([, data]) => data.income !== 0 || data.expense !== 0
-    );
+        // 2. Map the summarized data to the account details for display.
+        return accounts
+            .map(account => {
+                const summary = summaryByAccount[account.id];
+                return {
+                    ...account,
+                    income: summary ? summary.income : 0,
+                    expense: summary ? summary.expense : 0,
+                };
+            })
+            .filter(account => account.income !== 0 || account.expense !== 0);
 
-  return (
-    <section aria-labelledby="accounts-heading">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <h2 id="accounts-heading" className="text-2xl font-bold mb-2 sm:mb-0">Accounts Overview</h2>
-            <div className="bg-gray-700 p-3 rounded-lg text-center">
-                <p className="text-sm text-gray-400">Total Balance</p>
-                <p className="text-xl font-semibold text-white">{formatCurrency(totalBalance, currency)}</p>
-            </div>
-        </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-24 lg:mb-0">
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {accounts.map((account) => (
-              <div key={account.id} className={`p-6 rounded-xl shadow-lg text-white bg-gradient-to-br ${account.gradient} flex flex-col justify-between h-full`}>
-                <div>
-                    <p className="text-xl font-semibold">{account.name}</p>
-                </div>
-                <p className="text-3xl font-bold mt-4 self-end">
-                  {formatCurrency(convertAmount(account.balance, 'USD', currency.code), currency)}
-                </p>
-              </div>
-            ))}
-        </div>
-        <div className="lg:col-span-1 bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col">
-            <h3 className="text-lg font-semibold mb-4 text-white">Account Summary</h3>
-            <div className="space-y-4 flex-grow overflow-y-auto pr-2">
-                {filteredAccountSummary.map(([accountName, data]) => (
-                    <div key={accountName} className="bg-gray-700 p-3 rounded-lg">
-                        <p className="text-gray-300 font-medium mb-2">{accountName}</p>
-                        <div className="flex justify-between items-center">
-                          <div>
-                              <p className="font-semibold text-green-400">Income: {formatCurrency(data.income, currency)}</p>
-                              <p className="font-semibold text-red-400">Expense: {formatCurrency(data.expense, currency)}</p>
-                          </div>
-                        </div>
+    }, [transactions, accounts, currency.code]);
+
+    return (
+        <div className="p-4 md:p-6 bg-gray-800 text-white rounded-lg shadow-lg">
+            <h2 className="text-xl md:text-2xl font-bold mb-4">Accounts Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {summarizedAccounts.map(account => (
+                    // The `key` prop is essential in React for list rendering.
+                    <div key={account.id} className="p-4 bg-gray-700 rounded-lg">
+                        <h3 className="font-bold text-lg mb-2">{account.name}</h3>
+                        <div className="text-green-400">Income: {currency.symbol}{account.income.toFixed(2)}</div>
+                        <div className="text-red-400">Expense: {currency.symbol}{account.expense.toFixed(2)}</div>
                     </div>
                 ))}
             </div>
         </div>
-      </div>
-    </section>
-  );
+    );
 };
 
 export default Accounts;

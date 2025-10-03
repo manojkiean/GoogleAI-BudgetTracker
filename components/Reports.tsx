@@ -1,32 +1,63 @@
+
 import React, { useState, useEffect } from 'react';
-import mockData from '../mock-data.json';
-import { Currency } from '../types';
+import { Currency, Transaction } from '../types';
 
 interface ReportsProps {
   currency: Currency;
+  transactions: Transaction[];
 }
 
-const Reports: React.FC<ReportsProps> = ({ currency }) => {
+const Reports: React.FC<ReportsProps> = ({ currency, transactions }) => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [tableData, setTableData] = useState<any[]>([]);
+  const [tableHeaders, setTableHeaders] = useState<string[]>([]);
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
   useEffect(() => {
-    let data: any[] = [];
+    let data: Transaction[] = [];
     if (selectedCategory === 'Income') {
-      data = mockData.incomes;
+      data = transactions.filter(t => t.type === 'income');
     } else if (selectedCategory === 'Expense') {
-      data = mockData.expenses;
+      data = transactions.filter(t => t.type === 'expense');
     } else if (selectedCategory === 'Subscriptions') {
-      data = mockData.subscriptions;
+      data = transactions.filter(t => t.type === 'subscription');
     } else if (selectedCategory === 'All') {
-      data = [
-        ...mockData.incomes.map(item => ({ ...item, type: 'Income' })),
-        ...mockData.expenses.map(item => ({ ...item, type: 'Expense' })),
-        ...mockData.subscriptions.map(item => ({ ...item, type: 'Subscription' }))
-      ];
+      data = transactions;
     }
-    setTableData(data.map(({ id, ...rest }) => rest));
-  }, [selectedCategory]);
+
+    let headers: string[] = [];
+    if (selectedCategory === 'All') {
+        headers = ['type', 'source', 'category', 'amount', 'date', 'account', 'subscriptionType', 'renewalDate', 'frequency'];
+    } else if (selectedCategory === 'Subscriptions') {
+        headers = ['type', 'source', 'category', 'amount', 'date', 'account', 'subscriptionType', 'renewalDate', 'frequency'];
+    } else { // Income and Expense
+        headers = ['type', 'source', 'category', 'amount', 'date', 'account'];
+    }
+    setTableHeaders(headers);
+
+    const processedData = data.map(item => {
+      const row: any = {};
+      headers.forEach(header => {
+        const value = item[header as keyof Transaction];
+        if ((header === 'date' || header === 'renewalDate') && value) {
+            row[header] = formatDate(value as string);
+        } else {
+            row[header] = value !== undefined && value !== null ? value : '';
+        }
+      });
+      return row;
+    });
+
+    setTableData(processedData);
+  }, [selectedCategory, transactions]);
 
   const escapeCSV = (value: any) => {
     if (value === null || value === undefined) {
@@ -41,9 +72,9 @@ const Reports: React.FC<ReportsProps> = ({ currency }) => {
 
   const convertToCSV = (data: any[]) => {
     if (data.length === 0) return '';
-    const headers = Object.keys(data[0]);
+    const headers = tableHeaders;
     const csvRows = [
-      headers.map(header => escapeCSV(header)).join(','),
+      headers.map(header => escapeCSV(header.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase()))).join(','),
       ...data.map(row =>
         headers.map(header =>
           escapeCSV(row[header])
@@ -103,20 +134,18 @@ const Reports: React.FC<ReportsProps> = ({ currency }) => {
             <table className="min-w-full bg-gray-700 rounded-lg">
               <thead>
                 <tr className="bg-gray-600">
-                  {Object.keys(tableData[0]).map(key => (
-                    key !== 'id' && <th key={key} className="p-3 text-left text-sm font-semibold text-gray-300">{key}</th>
+                  {tableHeaders.map(key => (
+                    <th key={key} className="p-3 text-left text-sm font-semibold text-gray-300">{key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {tableData.map((row, index) => (
                   <tr key={index} className="border-b border-gray-600">
-                    {Object.entries(row).map(([key, value]: [string, any], i) => (
-                      key !== 'id' && (
-                        <td key={i} className="p-3 text-sm text-gray-400">
-                          {key === 'amount' ? formatCurrency(value) : String(value)}
+                     {tableHeaders.map(header => (
+                        <td key={header} className="p-3 text-sm text-gray-400">
+                        {header === 'amount' ? formatCurrency(row[header]) : row[header]}
                         </td>
-                      )
                     ))}
                   </tr>
                 ))}
@@ -129,4 +158,4 @@ const Reports: React.FC<ReportsProps> = ({ currency }) => {
   );
 };
 
-export default Reports; 
+export default Reports;

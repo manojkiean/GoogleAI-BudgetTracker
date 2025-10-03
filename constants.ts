@@ -1,41 +1,7 @@
 
-import { Income, Expense, Subscription, Bill, AccountDetails as Account, Todo, Priority, Goal, IncomeSource, ExpenseSource, Account as AccountEnum } from './types';
+import { Transaction, Bill, AccountDetails as Account, Todo, Priority, Goal, IncomeSource, ExpenseSource, Account as AccountEnum, TransactionType } from './types';
 
-export const incomeData: Income[] = [];
-
-export const expenseData: Expense[] = [];
-
-export const budgetData: Record<ExpenseSource, number> = {
-    [ExpenseSource.RENT]: 0,
-    [ExpenseSource.BILLS]: 0,
-    [ExpenseSource.FOOD]: 0,
-    [ExpenseSource.TRANSPORTATION]: 0,
-    [ExpenseSource.GADGETS]: 0,
-    [ExpenseSource.OTHER]: 0,
-    [ExpenseSource.PIGGY_POT]: 0,
-    [ExpenseSource.PERSONAL_CARE]: 0,
-    [ExpenseSource.BUYING_CAR]: 0,
-    [ExpenseSource.HOLIDAYS]: 0,
-    [ExpenseSource.NETFLIX]: 0,
-    [ExpenseSource.COUNCIL_TAX]: 0,
-    [ExpenseSource.AMAZON_PRIME]: 0,
-    [ExpenseSource.INSURANCE]: 0,
-};
-
-export const incomeGoalData: Record<IncomeSource, number> = {
-    [IncomeSource.BUSINESS]: 0,
-    [IncomeSource.SALARY]: 0,
-    [IncomeSource.AIRBNB]: 0,
-    [IncomeSource.SELLING_PRODUCTS]: 0,
-    [IncomeSource.CRYPTO]: 0,
-    [IncomeSource.STOCKS_AND_SHARES]: 0,
-    [IncomeSource.BANKING]: 0,
-};
-
-export const subscriptionData: Subscription[] = [
-    { id: 1, service: ExpenseSource.NETFLIX, amount: 15.99, frequency: 'Monthly', nextPayment: '2024-02-01', status: 'Active', subscriptionType: 'Recurring', renewalDate: '2024-03-01' },
-    { id: 2, service: ExpenseSource.AMAZON_PRIME, amount: 9.99, frequency: 'Monthly', nextPayment: '2024-02-05', status: 'Active', subscriptionType: 'Recurring', renewalDate: '2024-03-05' },
-];
+export const transactionData: Transaction[] = [];
 
 export const billData: Bill[] = [];
 

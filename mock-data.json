@@ -1,15 +1,11 @@
 {
-  "incomes": [
-    { "id": 1, "source": "Salary", "category": "Salary", "amount": 5000, "date": "2024-01-15", "account": "HSBC Bank" },
-    { "id": 2, "source": "Freelance", "category": "Business", "amount": 1500, "date": "2024-01-20", "account": "Paypal" }
-  ],
-  "expenses": [
-    { "id": 1, "item": "Groceries", "category": "Food", "amount": 300, "date": "2024-01-18", "account": "Credit Card" },
-    { "id": 2, "item": "Utilities", "category": "Bills & Utilities", "amount": 150, "date": "2024-01-22", "account": "HSBC Bank" }
-  ],
-  "subscriptions": [
-    { "id": 1, "service": "Netflix", "amount": 15.99, "frequency": "Monthly", "nextPayment": "2024-02-01", "status": "Active" },
-    { "id": 2, "service": "Amazon Prime", "amount": 9.99, "frequency": "Monthly", "nextPayment": "2024-02-05", "status": "Active" }
+  "transactions": [
+    { "id": 1, "type": "income", "source": "Salary", "category": "Salary", "amount": 5000, "date": "2024-01-15", "account": "HSBC Bank" },
+    { "id": 2, "type": "income", "source": "Freelance", "category": "Business", "amount": 1500, "date": "2024-01-20", "account": "Paypal" },
+    { "id": 3, "type": "expense", "source": "Groceries", "category": "Food", "amount": 300, "date": "2024-01-18", "account": "Credit Card" },
+    { "id": 4, "type": "expense", "source": "Utilities", "category": "Bills & Utilities", "amount": 150, "date": "2024-01-22", "account": "HSBC Bank" },
+    { "id": 5, "type": "subscription", "source": "Netflix", "category": "Subscriptions", "amount": 15.99, "date": "2024-01-25", "account": "Credit Card", "frequency": "Monthly", "nextPayment": "2024-02-25", "status": "Active", "subscriptionType": "Recurring", "renewalDate": "2024-02-25" },
+    { "id": 6, "type": "subscription", "source": "Amazon Prime", "category": "Subscriptions", "amount": 9.99, "date": "2024-01-28", "account": "Credit Card", "frequency": "Monthly", "nextPayment": "2024-02-28", "status": "Active", "subscriptionType": "Recurring", "renewalDate": "2024-02-28" }
   ],
    "bills": [
     { "id": 1, "name": "Rent", "dueDate": "2024-02-01", "amount": 1200, "category": "Rent or Mortgage", "status": "Pending" },

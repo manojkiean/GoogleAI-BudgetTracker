@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Tab } from '../types';
-import { DashboardIcon, IncomeIcon, ExpensesIcon, SubscriptionsIcon, GoalIcon, AccountsIcon, TodoIcon, MyAccountIcon, CalcIcon, ReportsIcon } from './icons/IconComponents';
+import { DashboardIcon, ExpensesIcon, GoalIcon, AccountsIcon, TodoIcon, MyAccountIcon, CalcIcon, ReportsIcon, IncomeIcon, SubscriptionsIcon } from './icons/IconComponents';
 
 interface NavigationProps {
   activeTab: Tab;
@@ -30,15 +30,16 @@ const navGroups: NavGroup[] = [
         title: 'Finances',
         items: [
             { tab: Tab.ACCOUNTS, icon: <AccountsIcon /> },
-            { tab: Tab.EXPENSES, icon: <ExpensesIcon /> },
             { tab: Tab.INCOME, icon: <IncomeIcon /> },
+            { tab: Tab.EXPENSE, icon: <ExpensesIcon /> },
+            { tab: Tab.SUBSCRIPTION, icon: <SubscriptionsIcon /> },
+            { tab: Tab.TRANSACTIONS, icon: <ExpensesIcon /> },
         ]
     },
     {
         title: 'Planning',
         items: [
             { tab: Tab.GOALS, icon: <GoalIcon /> },
-            { tab: Tab.SUBSCRIPTIONS, icon: <SubscriptionsIcon /> },
             { tab: Tab.TODO, icon: <TodoIcon /> },
         ]
     },

@@ -1,84 +1,176 @@
 
 import React, { useState, useEffect } from 'react';
-import { ExpenseSource, Account, Goal } from '../types';
-import type { Expense } from '../types';
+import { Transaction, Account, ExpenseSource, TransactionType, Goal } from '../types';
 import { expenseSourceOptions } from '../constants';
+import TransactionList from './TransactionList';
 
 interface AddEditExpenseFormProps {
-  expense: Expense | null;
-  onSave: (expenseData: Omit<Expense, 'id'> & { id?: number }) => void;
+  expense?: Transaction | null;
+  transactions: Transaction[];
+  onSave: (expense: Omit<Transaction, 'id'> & { id?: number }) => Promise<boolean>;
   onCancel: () => void;
+  onDelete: (id: number) => void;
+  onEdit: (expense: Transaction) => void;
 }
 
-const AddEditExpenseForm: React.FC<AddEditExpenseFormProps> = ({ expense, onSave, onCancel }) => {
-    const [item, setItem] = useState('');
-    const [amount, setAmount] = useState('');
-    const [category, setCategory] = useState<ExpenseSource>(ExpenseSource.FOOD);
-    const [date, setDate] = useState('');
-    const [account, setAccount] = useState<Account>(Account.HSBC);
+const expenseOptions = expenseSourceOptions.filter(s => s.goal === Goal.EXPENSES);
 
-    useEffect(() => {
-        if (expense) {
-            setItem(expense.item);
-            setAmount(expense.amount.toString());
-            setCategory(expense.category);
-            setDate(expense.date);
-            setAccount(expense.account);
-        } else {
-            setItem('');
-            setAmount('');
-            setCategory(ExpenseSource.FOOD);
-            setDate(new Date().toISOString().split('T')[0]);
-            setAccount(Account.HSBC);
-        }
-    }, [expense]);
+const AddEditExpenseForm: React.FC<AddEditExpenseFormProps> = ({ expense, transactions, onSave, onCancel, onDelete, onEdit }) => {
+  const [source, setSource] = useState('');
+  const [category, setCategory] = useState<ExpenseSource | ''>(expenseOptions.length > 0 ? expenseOptions[0].source : '');
+  const [amount, setAmount] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [account, setAccount] = useState<Account>(Account.HSBC);
+  const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+  const [expenseTransactions, setExpenseTransactions] = useState<Transaction[]>([]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const expenseData = {
-            item,
-            amount: parseFloat(amount),
-            category,
-            date,
-            account,
-        };
-        onSave(expense ? { ...expenseData, id: expense.id } : expenseData);
-    };
+  const resetForm = () => {
+    setSource('');
+    setCategory(expenseOptions.length > 0 ? expenseOptions[0].source : '');
+    setAmount('');
+    setDate(new Date().toISOString().split('T')[0]);
+    setAccount(Account.HSBC);
+  };
 
-    return (
-        <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-2xl shadow-lg mb-6">
+  useEffect(() => {
+    if (expense) {
+      setSource(expense.source);
+      setCategory(expense.category as ExpenseSource);
+      setAmount(String(expense.amount));
+      setDate(new Date(expense.date).toISOString().split('T')[0]);
+      setAccount(expense.account as Account);
+    } else {
+      resetForm();
+    }
+    setMessage(null);
+  }, [expense]);
+
+  useEffect(() => {
+    setExpenseTransactions(transactions.filter(t => t && t.type === TransactionType.EXPENSE));
+  }, [transactions]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!source || !category || !amount || isNaN(parseFloat(amount))) return;
+
+    const success = await onSave({
+      id: expense?.id,
+      source,
+      amount: parseFloat(amount),
+      date,
+      account,
+      category,
+      type: TransactionType.EXPENSE,
+    });
+
+    if (success) {
+      setMessage({ text: 'Expense saved successfully!', type: 'success' });
+      if (!expense) {
+        resetForm();
+      }
+    } else {
+      setMessage({ text: 'Failed to save expense.', type: 'error' });
+    }
+  };
+
+  const handleCancel = () => {
+    setMessage(null);
+    onCancel();
+  };
+
+  return (
+    <>
+      <div className="bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in mt-6">
+        <h3 className="text-xl font-semibold text-white mb-4">{expense ? 'Edit Expense' : 'Add Expense'}</h3>
+        {message && (
+          <div className={`p-4 mb-4 text-sm rounded-lg ${message.type === 'success' ? 'bg-green-800 text-green-200' : 'bg-red-800 text-red-200'}`}>
+            {message.text}
+          </div>
+        )}
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="item" className="block text-sm font-medium text-gray-300">Item</label>
-                    <input type="text" id="item" value={item} onChange={(e) => setItem(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mt-1 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" required />
+                    <label htmlFor="source" className="block text-sm font-medium text-gray-300 mb-2">Expense Item</label>
+                    <input 
+                        type="text"
+                        id="source"
+                        value={source}
+                        onChange={(e) => setSource(e.target.value)}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                        placeholder='e.g. Coffee'
+                        required
+                    />
                 </div>
                 <div>
-                    <label htmlFor="amount" className="block text-sm font-medium text-gray-300">Amount</label>
-                    <input type="number" id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mt-1 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" required />
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                  <select 
+                      id="category"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value as ExpenseSource)}
+                      className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                  >
+                      {expenseOptions.map(s => <option key={s.source} value={s.source}>{s.source}</option>)}
+                  </select>
+                </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label htmlFor="amount" className="block text-sm font-medium text-gray-300 mb-2">Amount</label>
+                    <input 
+                        type="number"
+                        id="amount"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                        placeholder='50'
+                        required
+                    />
                 </div>
                 <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-300">Category</label>
-                    <select id="category" value={category} onChange={(e) => setCategory(e.target.value as ExpenseSource)} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mt-1 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
-                        {expenseSourceOptions.filter(s => s.goal === Goal.EXPENSES).map(s => <option key={s.source} value={s.source}>{s.source}</option>)}
-                    </select>
+                    <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">Date</label>
+                    <input 
+                        type="date"
+                        id="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                        required
+                    />
                 </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="date" className="block text-sm font-medium text-gray-300">Date</label>
-                    <input type="date" id="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mt-1 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500" required />
-                </div>
-                <div>
-                    <label htmlFor="account" className="block text-sm font-medium text-gray-300">Account</label>
-                    <select id="account" value={account} onChange={(e) => setAccount(e.target.value as Account)} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 mt-1 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    <label htmlFor="account" className="block text-sm font-medium text-gray-300 mb-2">Account</label>
+                    <select 
+                        id="account"
+                        value={account}
+                        onChange={(e) => setAccount(e.target.value as Account)}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                    >
                         {Object.values(Account).map(acc => <option key={acc} value={acc}>{acc}</option>)}
                     </select>
                 </div>
             </div>
-            <div className="mt-6 flex justify-end space-x-4">
-                <button type="button" onClick={onCancel} className="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-500 transition-colors">Cancel</button>
-                <button type="submit" className="bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity duration-300">{expense ? 'Update' : 'Add'}</button>
+            <div className="flex justify-end space-x-4 pt-2">
+              <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white"
+              >
+                  Cancel
+              </button>
+              <button
+                  type="submit"
+                  className="bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity duration-300"
+              >
+                  {expense ? 'Save Changes' : 'Add Expense'}
+              </button>
             </div>
         </form>
-    );
+      </div>
+      <TransactionList transactions={expenseTransactions} onEdit={onEdit} onDelete={onDelete} type={TransactionType.EXPENSE} />
+    </>
+  );
 };
 
 export default AddEditExpenseForm;

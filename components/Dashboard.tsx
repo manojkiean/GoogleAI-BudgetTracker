@@ -4,25 +4,27 @@ import { DollarIcon, PoundIcon, EuroIcon, MenuIcon, IncomeIcon, ExpensesIcon, Su
 import SummaryCard from './SummaryCard';
 import ExpensePieChart from './charts/ExpensePieChart';
 import BudgetBarChart from './charts/BudgetBarChart';
-import mockData from '../mock-data.json';
-import type { Currency, ExpenseSource, Todo, GoalDetails, Subscription } from '../types';
+import { Currency, ExpenseSource, Todo, GoalDetails, Transaction, TransactionType } from '../types';
 import TodoList from './TodoList';
-import Income from './Income';
-import Expenses from './Expenses';
 import GoalList from './GoalList';
 import Calendar from './Calendar';
-import { formatDate } from '../utils/date';
-
-const { incomes: mockIncome, expenses: mockExpenses } = mockData;
 
 interface DashboardProps {
   currency: Currency;
   onCategorySelect: (category: ExpenseSource) => void;
   todos: Todo[];
-  subscriptions: Subscription[];
+  transactions: Transaction[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos, subscriptions }) => {
+const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+};
+
+const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos, transactions }) => {
   const [showIncomeDetails, setShowIncomeDetails] = useState(true);
   const [showExpenseDetails, setShowExpenseDetails] = useState(true);
   const [showSubscriptions, setShowSubscriptions] = useState(true);
@@ -41,12 +43,26 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
     });
   }, []);
 
-  const { totalIncome, totalExpenses, netBalance } = useMemo(() => {
-    const totalIncomeValue = mockIncome.reduce((acc, income) => acc + income.amount, 0);
-    const totalExpensesValue = mockExpenses.reduce((acc, expense) => acc + expense.amount, 0);
-    const netBalanceValue = totalIncomeValue - totalExpensesValue;
-    return { totalIncome: totalIncomeValue, totalExpenses: totalExpensesValue, netBalance: netBalanceValue };
-  }, []);
+  const { totalIncome, totalExpenses, netBalance, subscriptions, incomeTransactions, expenseTransactions } = useMemo(() => {
+    const incomeTrans = transactions.filter(t => t.type === TransactionType.INCOME);
+    const expenseTrans = transactions.filter(t => t.type === TransactionType.EXPENSE);
+    const subscriptionTrans = transactions.filter(t => t.type === TransactionType.SUBSCRIPTION);
+
+    const totalIncomeValue = incomeTrans.reduce((acc, income) => acc + income.amount, 0);
+    const totalExpensesValue = expenseTrans.reduce((acc, expense) => acc + expense.amount, 0);
+    const totalSubscriptionsValue = subscriptionTrans.reduce((acc, sub) => acc + sub.amount, 0);
+
+    const netBalanceValue = totalIncomeValue - (totalExpensesValue + totalSubscriptionsValue);
+
+    return {
+      totalIncome: totalIncomeValue,
+      totalExpenses: totalExpensesValue + totalSubscriptionsValue,
+      netBalance: netBalanceValue,
+      subscriptions: subscriptionTrans,
+      incomeTransactions: incomeTrans,
+      expenseTransactions: [...expenseTrans, ...subscriptionTrans],
+    };
+  }, [transactions]);
 
   const incomeGoals = goals.filter(goal => goal.type === 'Income');
   const expenseGoals = goals.filter(goal => goal.type === 'Expense');
@@ -66,7 +82,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xl font-semibold flex items-center"><IncomeIcon /> <span className="ml-2">Budget vs Spending</span></h3>
                     </div>
-                    <BudgetBarChart currency={currency} onCategoryClick={onCategorySelect} expenses={mockExpenses} />
+                    <BudgetBarChart currency={currency} onCategoryClick={onCategorySelect} expenses={expenseTransactions} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
@@ -76,7 +92,16 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
                                 <MenuIcon />
                             </button>
                         </div>
-                        {showIncomeDetails && <Income currency={currency} isDashboard={true} />}
+                        {showIncomeDetails && 
+                          <ul className="space-y-2">
+                            {incomeTransactions.map(t => (
+                              <li key={t.id} className="flex justify-between items-center p-2 bg-gray-900 rounded-lg">
+                                <span className="text-white">{t.source}</span>
+                                <span className="text-green-400 font-semibold">{currency.symbol}{t.amount.toFixed(2)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        }
                     </div>
                     <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
                         <div className="flex justify-between items-center mb-4">
@@ -85,30 +110,39 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
                                 <MenuIcon />
                             </button>
                         </div>
-                        {showExpenseDetails && <Expenses currency={currency} filter={null} onClearFilter={() => {}} isDashboard={true} />}
+                        {showExpenseDetails && 
+                          <ul className="space-y-2">
+                            {expenseTransactions.map(t => (
+                              <li key={t.id} className="flex justify-between items-center p-2 bg-gray-900 rounded-lg">
+                                <span className="text-white">{t.source}</span>
+                                <span className={`font-semibold ${t.type === 'subscription' ? 'text-yellow-400' : 'text-red-400'}`}>{currency.symbol}{t.amount.toFixed(2)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        }
                     </div>
                 </div>
                 <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
-    <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold flex items-center"><SubscriptionsIcon /> <span className="ml-2">Subscriptions</span></h3>
-        <button onClick={() => setShowSubscriptions(!showSubscriptions)} className="text-gray-400 hover:text-white">
-            <MenuIcon />
-        </button>
-    </div>
-    {showSubscriptions && (
-        <ul className="space-y-4">
-            {subscriptions.map(sub => (
-                <li key={sub.id} className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center bg-gray-800 p-4 rounded-lg">
-                    <span className="text-white font-medium sm:col-span-1">{sub.service}</span>
-                    <span className="text-gray-400 text-right sm:text-center">{sub.frequency}</span>
-                    <span className="text-gray-400 sm:text-center">Next: {formatDate(sub.nextPayment)}</span>
-                    <span className="text-red-400 font-semibold text-right">{currency.symbol} {sub.amount.toFixed(2)}</span>
-                </li>
-            ))}
-        </ul>
-    )}
-</div>
-<div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
+                  <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-semibold flex items-center"><SubscriptionsIcon /> <span className="ml-2">Subscriptions</span></h3>
+                      <button onClick={() => setShowSubscriptions(!showSubscriptions)} className="text-gray-400 hover:text-white">
+                          <MenuIcon />
+                      </button>
+                  </div>
+                  {showSubscriptions && (
+                      <ul className="space-y-4">
+                          {subscriptions.map(sub => (
+                              <li key={sub.id} className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center bg-gray-800 p-4 rounded-lg">
+                                  <span className="text-white font-medium sm:col-span-1">{sub.source}</span>
+                                  <span className="text-gray-400 text-right sm:text-center">Monthly</span>
+                                  <span className="text-gray-400 sm:text-center">Next: {formatDate(new Date(sub.date).toLocaleDateString())}</span>
+                                  <span className="text-red-400 font-semibold text-right">{currency.symbol} {sub.amount.toFixed(2)}</span>
+                              </li>
+                          ))}
+                      </ul>
+                  )}
+              </div>
+                <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xl font-semibold flex items-center"><TodoIcon /> <span className="ml-2">To-Do List</span></h3>
                     </div>
@@ -121,7 +155,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xl font-semibold flex items-center"><ExpensesIcon /> <span className="ml-2">Expense Breakdown</span></h3>
                     </div>
-                    <ExpensePieChart currency={currency} onCategoryClick={onCategorySelect} expenses={mockExpenses} />
+                    <ExpensePieChart currency={currency} onCategoryClick={onCategorySelect} expenses={expenseTransactions} />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">

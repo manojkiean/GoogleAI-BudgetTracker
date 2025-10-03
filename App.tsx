@@ -1,21 +1,22 @@
 
-import React, { useState, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useCallback, lazy, Suspense, useEffect } from 'react';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
-import { Currency, Tab, ExpenseSource, User, Todo, Subscription } from './types';
-import { mockUsers } from './utils/config';
-import mockData from './mock-data.json';
+import { Currency, Tab, ExpenseSource, User, Todo, Transaction, TransactionType, AccountDetails } from './types';
+import { mockUsers, mockData } from './utils/config';
+import { getTodos, addTodo, updateTodo, deleteTodo, getTransactions, addTransaction, updateTransaction, deleteTransaction, getAccounts } from './utils/api';
 
 const Dashboard = lazy(() => import('./components/Dashboard'));
-const Income = lazy(() => import('./components/Income'));
-const Expenses = lazy(() => import('./components/Expenses'));
-const Subscriptions = lazy(() => import('./components/Subscriptions'));
+const Transactions = lazy(() => import('./components/Transactions'));
 const Goals = lazy(() => import('./components/Goals'));
 const Accounts = lazy(() => import('./components/Accounts'));
 const TodoList = lazy(() => import('./components/TodoList'));
 const Login = lazy(() => import('./components/Login'));
 const MyAccount = lazy(() => import('./components/MyAccount'));
 const Reports = lazy(() => import('./components/Reports'));
+const AddEditIncomeForm = lazy(() => import('./components/AddEditIncomeForm'));
+const AddEditExpenseForm = lazy(() => import('./components/AddEditExpenseForm'));
+const AddEditSubscriptionForm = lazy(() => import('./components/AddEditSubscriptionForm'));
 
 const currencies: Currency[] = [
   { symbol: '$', code: 'USD' },
@@ -30,11 +31,35 @@ const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>(Tab.DASHBOARD);
   const [currency, setCurrency] = useState<Currency>(currencies[0]);
-  const [expenseFilter, setExpenseFilter] = useState<ExpenseSource | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [todos, setTodos] = useState<Todo[]>(mockData.todos as any);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(mockData.subscriptions as any);
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [accounts, setAccounts] = useState<AccountDetails[]>([]);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchTodos();
+      fetchTransactions();
+      fetchAccounts();
+    }
+  }, [isLoggedIn]);
+
+  const fetchTodos = async () => {
+    const todos = await getTodos();
+    setTodos(todos);
+  };
+
+  const fetchTransactions = async () => {
+    const transactions = await getTransactions();
+    setTransactions(transactions);
+  };
+
+  const fetchAccounts = async () => {
+    const accounts = await getAccounts();
+    setAccounts(accounts);
+  };
 
   const handleLogin = (userId: string) => {
     const user = mockUsers.find(u => u.userId === userId);
@@ -60,42 +85,62 @@ const App: React.FC = () => {
   };
 
   const handleCategorySelect = useCallback((category: ExpenseSource) => {
-    setExpenseFilter(category);
-    setActiveTab(Tab.EXPENSES);
-  }, []);
-
-  const clearExpenseFilter = useCallback(() => {
-    setExpenseFilter(null);
+    setActiveTab(Tab.TRANSACTIONS);
   }, []);
 
   const handleSetTab = useCallback((tab: Tab) => {
-    if (activeTab === Tab.EXPENSES && tab !== Tab.EXPENSES) {
-      clearExpenseFilter();
-    }
     setActiveTab(tab);
-  }, [activeTab, clearExpenseFilter]);
+    setEditingTransaction(null);
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
   
-  const updateTodos = (updatedTodos: Todo[]) => {
-    setTodos(updatedTodos);
+  const updateTodos = async (updatedTodos: Todo[]) => {
+    fetchTodos();
+  };
+  
+  const onSave = async (transaction: Omit<Transaction, 'id'> & { id?: number }) => {
+    try {
+      if (transaction.id) {
+        await updateTransaction(transaction as Transaction);
+      } else {
+        await addTransaction(transaction as Omit<Transaction, 'id'>);
+      }
+      await fetchTransactions();
+      setEditingTransaction(null); // Always reset the form state
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   };
 
-  const updateSubscriptions = (updatedSubscriptions: Subscription[]) => {
-    setSubscriptions(updatedSubscriptions);
+  const onCancel = () => {
+    setEditingTransaction(null);
+  };
+
+  const onDelete = async (id: number) => {
+    await deleteTransaction(id);
+    fetchTransactions();
+  };
+
+  const onEdit = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setActiveTab(transaction.type === 'income' ? Tab.INCOME : transaction.type === 'expense' ? Tab.EXPENSE : Tab.SUBSCRIPTION);
   };
 
   const renderContent = () => {
     const components: Record<Tab, React.ReactNode> = {
-      [Tab.DASHBOARD]: <Dashboard currency={currency} onCategorySelect={handleCategorySelect} todos={todos} subscriptions={subscriptions} />,
-      [Tab.INCOME]: <Income currency={currency} />,
-      [Tab.EXPENSES]: <Expenses currency={currency} filter={expenseFilter} onClearFilter={clearExpenseFilter} />,
-      [Tab.SUBSCRIPTIONS]: <Subscriptions currency={currency} />,
+      [Tab.DASHBOARD]: <Dashboard currency={currency} onCategorySelect={handleCategorySelect} todos={todos} transactions={transactions} />,
+      [Tab.TRANSACTIONS]: <Transactions currency={currency} transactions={transactions} />,
+      [Tab.INCOME]: <AddEditIncomeForm onSave={(income) => onSave({ ...income, type: TransactionType.INCOME })} onCancel={onCancel} transactions={transactions} onDelete={onDelete} onEdit={onEdit} income={editingTransaction} />,
+      [Tab.EXPENSE]: <AddEditExpenseForm onSave={(expense) => onSave({ ...expense, type: TransactionType.EXPENSE })} onCancel={onCancel} transactions={transactions} onDelete={onDelete} onEdit={onEdit} expense={editingTransaction} />,
+      [Tab.SUBSCRIPTION]: <AddEditSubscriptionForm onSave={(subscription) => onSave({ ...subscription, type: TransactionType.SUBSCRIPTION })} onCancel={onCancel} transactions={transactions} onDelete={onDelete} onEdit={onEdit} subscription={editingTransaction} />,
       [Tab.GOALS]: <Goals currency={currency} />,
-      [Tab.ACCOUNTS]: <Accounts currency={currency} />,
-      [Tab.REPORTS]: <Reports currency={currency} />,
+      [Tab.ACCOUNTS]: <Accounts currency={currency} transactions={transactions} accounts={accounts} />,
+      [Tab.REPORTS]: <Reports currency={currency} transactions={transactions} />,
       [Tab.TODO]: <TodoList initialTodos={todos} onUpdateTodos={updateTodos} />,
       [Tab.MY_ACCOUNT]: <MyAccount user={currentUser} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />,
     };

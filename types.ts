@@ -1,8 +1,9 @@
 export enum Tab {
   DASHBOARD = 'Dashboard',
+  TRANSACTIONS = 'Transactions',
   INCOME = 'Income',
-  EXPENSES = 'Expenses',
-  SUBSCRIPTIONS = 'Subscriptions',
+  EXPENSE = 'Expense',
+  SUBSCRIPTION = 'Subscription',
   GOALS = 'Goals',
   ACCOUNTS = 'Accounts',
   TODO = 'To-Do List',
@@ -15,32 +16,24 @@ export interface Currency {
   code: 'USD' | 'GBP' | 'EUR' | 'INR' | 'AUD' | 'SGD';
 }
 
-export interface Income {
+export enum TransactionType {
+  INCOME = 'income',
+  EXPENSE = 'expense',
+  SUBSCRIPTION = 'subscription',
+}
+
+export interface Transaction {
   id: number;
+  type: TransactionType;
   source: string;
   category: string;
   amount: number;
   date: string;
-  account: Account;
-}
-
-export interface Expense {
-  id: number;
-  item: string;
-  category: ExpenseSource;
-  amount: number;
-  date: string;
-  account: Account;
-}
-
-export interface Subscription {
-  id: number;
-  service: string;
-  amount: number;
-  frequency: 'Monthly' | 'Yearly';
-  nextPayment: string;
-  status: 'Active' | 'Cancelled';
-  subscriptionType: 'Recurring' | 'One Off';
+  account_id: number;
+  frequency?: 'Monthly' | 'Yearly';
+  nextPayment?: string;
+  status?: 'Active' | 'Cancelled';
+  subscriptionType?: 'Recurring' | 'One Off';
   renewalDate?: string;
 }
 
@@ -70,7 +63,7 @@ export interface Todo {
   id: number;
   task: string;
   priority: Priority;
-  dueDate: string;
+  dueDate?: string;
   completed: boolean;
 }
 

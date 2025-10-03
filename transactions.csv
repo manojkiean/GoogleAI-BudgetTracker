@@ -1,0 +1,7 @@
+id,type,source,category,amount,date,account,frequency,nextPayment,status
+1,income,Salary,Salary,5000,2024-01-15,HSBC Bank,,,
+2,income,Freelance,Business,1500,2024-01-20,Paypal,,,
+3,expense,Groceries,Food,300,2024-01-18,Credit Card,,,
+4,expense,Utilities,Bills & Utilities,150,2024-01-22,HSBC Bank,,,
+5,subscription,Netflix,,15.99,,,Monthly,2024-02-01,Active
+6,subscription,Amazon Prime,,9.99,,,Monthly,2024-02-05,Active
