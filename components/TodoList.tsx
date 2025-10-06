@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
-import { Todo } from '../types';
-import { getTodos, updateTodo, deleteTodo, addTodo } from '../utils/api';
+import { Todo, Priority } from '../types';
+import { updateTodo, deleteTodo, addTodo } from '../utils/api';
 import { FaTrash, FaPencilAlt, FaPlus, FaTimes } from 'react-icons/fa';
+import AddEditTodoForm from './AddEditTodoForm';
 
 const TodoItem: React.FC<{
     todo: Todo;
@@ -10,8 +12,8 @@ const TodoItem: React.FC<{
     onDelete: (id: number) => void;
     isDashboard?: boolean;
 }> = ({ todo, onToggle, onEdit, onDelete, isDashboard }) => (
-    <div className="flex items-center justify-between bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-colors duration-200">
-        <div className="flex items-center">
+    <div className="flex items-center justify-between w-full bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+        <div className="flex items-center flex-grow min-w-0">
             <input
                 type="checkbox"
                 id={`todo-${todo.id}`}
@@ -19,25 +21,51 @@ const TodoItem: React.FC<{
                 onChange={() => onToggle(todo.id, !todo.completed)}
                 className="w-5 h-5 rounded text-cyan-500 bg-gray-800 border-gray-600 focus:ring-cyan-600 cursor-pointer"
             />
-            <label htmlFor={`todo-${todo.id}`} className="ml-4 cursor-pointer">
-                <p className={`font-medium ${todo.completed ? 'line-through text-gray-500' : 'text-white'}`}>{todo.task}</p>
+            <label htmlFor={`todo-${todo.id}`} className="ml-4 cursor-pointer flex-1 min-w-0">
+                <p className={`font-medium truncate ${todo.completed ? 'line-through text-gray-500' : 'text-white'}`}>
+                    {todo.task}
+                </p>
             </label>
         </div>
         {!isDashboard && (
-            <div className="flex items-center space-x-3">
-                <button onClick={() => onEdit(todo)} className="text-gray-400 hover:text-cyan-400"><FaPencilAlt /></button>
-                <button onClick={() => onDelete(todo.id)} className="text-gray-400 hover:text-red-500"><FaTrash /></button>
-            </div>
+            <>
+                <div className="flex-shrink-0 mx-4">
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getPriorityClass(todo.priority)}`}>
+                        {todo.priority}
+                    </span>
+                </div>
+                <div className="flex items-center flex-shrink-0 space-x-3">
+                    <span className="text-sm text-gray-400">
+                        {new Date(todo.dueDate).toLocaleDateString()}
+                    </span>
+                    <button onClick={() => onEdit(todo)} className="text-gray-400 hover:text-cyan-400">
+                        <FaPencilAlt />
+                    </button>
+                    <button onClick={() => onDelete(todo.id)} className="text-gray-400 hover:text-red-500">
+                        <FaTrash />
+                    </button>
+                </div>
+            </>
         )}
     </div>
 );
 
+const getPriorityClass = (priority: Priority) => {
+    switch (priority) {
+        case Priority.High: return 'bg-red-500 text-white';
+        case Priority.Medium: return 'bg-yellow-500 text-black';
+        case Priority.Low: return 'bg-green-500 text-white';
+        default: return 'bg-gray-500 text-white';
+    }
+};
+
 interface TodoListProps {
     initialTodos?: Todo[];
     isDashboard?: boolean;
+    onUpdateTodos?: () => void;
 }
 
-const TodoList: React.FC<TodoListProps> = ({ initialTodos, isDashboard = false }) => {
+const TodoList: React.FC<TodoListProps> = ({ initialTodos, isDashboard = false, onUpdateTodos }) => {
     const [todos, setTodos] = useState<Todo[]>([]);
     const [isFormVisible, setIsFormVisible] = useState(false);
     const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
@@ -47,44 +75,67 @@ const TodoList: React.FC<TodoListProps> = ({ initialTodos, isDashboard = false }
     useEffect(() => {
         if (initialTodos) {
             setTodos(sanitizeTodos(initialTodos));
-        } else {
-            getTodos().then(fetchedTodos => setTodos(sanitizeTodos(fetchedTodos)));
         }
     }, [initialTodos]);
 
-    const handleToggleTodo = (id: number, completed: boolean) => {
+    const handleUpdate = () => {
+        if (onUpdateTodos) {
+            onUpdateTodos();
+        }
+    };
+
+    const handleToggleTodo = async (id: number, completed: boolean) => {
         const todo = todos.find(t => t.id === id);
         if (todo) {
-            updateTodo({ ...todo, completed }).then(updatedTodo => {
-                setTodos(todos.map(t => t.id === id ? { ...t, ...updatedTodo } : t));
-            });
+            try {
+                await updateTodo({ ...todo, completed });
+                handleUpdate();
+            } catch (error) {
+                console.error("Failed to toggle todo:", error);
+            }
         }
     };
 
-    const handleDeleteTodo = (id: number) => {
-        deleteTodo(id).then(() => {
-            setTodos(todos.filter(t => t.id !== id));
-        });
+    const handleDeleteTodo = async (id: number) => {
+        try {
+            await deleteTodo(id);
+            handleUpdate();
+        } catch (error) {
+            console.error("Failed to delete todo:", error);
+        }
     };
 
-    const handleSaveTodo = (todoData: Omit<Todo, 'id'> | Todo) => {
-        if ('id' in todoData) {
-            updateTodo(todoData).then(updatedTodo => {
-                setTodos(todos.map(t => t.id === todoData.id ? { ...t, ...updatedTodo } : t));
-            });
-        } else {
-            addTodo(todoData).then(newTodo => {
-                setTodos([...todos, sanitizeTodos([newTodo])[0]]);
-            });
+    const handleSaveTodo = async (todoData: Omit<Todo, 'id'> & { id?: number }): Promise<boolean> => {
+        try {
+            if (todoData.id) {
+                const existingTodo = todos.find(t => t.id === todoData.id);
+                if (existingTodo) {
+                    await updateTodo({ ...existingTodo, ...todoData });
+                }
+            } else {
+                await addTodo(todoData as Omit<Todo, 'id'>);
+            }
+            handleUpdate();
+            if(isFormVisible){
+                setIsFormVisible(false);
+                setEditingTodo(null);
+            }
+            return true;
+        } catch (error) {
+            console.error("Failed to save todo:", error);
+            return false;
         }
-        setIsFormVisible(false);
-        setEditingTodo(null);
     };
 
     const handleEdit = (todo: Todo) => {
         setEditingTodo(todo);
         setIsFormVisible(true);
     };
+
+    const handleCancel = () => {
+        setIsFormVisible(false);
+        setEditingTodo(null);
+    }
 
     const visibleTodos = isDashboard ? todos.slice(0, 5) : todos;
 
@@ -99,10 +150,10 @@ const TodoList: React.FC<TodoListProps> = ({ initialTodos, isDashboard = false }
                 )}
             </div>
             {isFormVisible && !isDashboard && (
-                <TodoForm 
+                <AddEditTodoForm 
                     onSave={handleSaveTodo}
-                    onCancel={() => { setIsFormVisible(false); setEditingTodo(null); }}
-                    initialData={editingTodo}
+                    onCancel={handleCancel}
+                    todo={editingTodo}
                 />
             )}
             <div className="space-y-4">
@@ -117,51 +168,5 @@ const TodoList: React.FC<TodoListProps> = ({ initialTodos, isDashboard = false }
         </div>
     );
 };
-
-const TodoForm: React.FC<{
-    onSave: (todoData: Omit<Todo, 'id'> | Todo) => void;
-    onCancel: () => void;
-    initialData?: Todo | null;
-}> = ({ onSave, onCancel, initialData }) => {
-    const [task, setTask] = useState(initialData?.task || '');
-    const [priority, setPriority] = useState(initialData?.priority || 'medium');
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const todoPayload = {
-            ...(initialData || {}),
-            task,
-            priority,
-            completed: initialData?.completed || false,
-        };
-        onSave(todoPayload as Omit<Todo, 'id'> | Todo);
-    };
-
-    return (
-        <form onSubmit={handleSubmit} className="mb-6 p-4 bg-gray-700 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input 
-                type="text" 
-                value={task}
-                onChange={(e) => setTask(e.target.value)}
-                placeholder="New task..."
-                className="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                required
-            />
-            </div>
-            <div className="flex items-center justify-between mt-4">
-                <select value={priority} onChange={(e) => setPriority(e.target.value)} className="bg-gray-800 text-white p-2 rounded-lg border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500">
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                </select>
-                <div className="space-x-2">
-                    <button type="submit" className="px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 font-semibold">{initialData ? 'Update' : 'Add'}</button>
-                    <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 font-semibold">Cancel</button>
-                </div>
-            </div>
-        </form>
-    );
-}
 
 export default TodoList;

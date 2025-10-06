@@ -66,7 +66,7 @@ export const deleteTransaction = async (id: number): Promise<void> => {
 
 // Todos
 export const getTodos = async (): Promise<Todo[]> => {
-    const { data, error } = await supabase.from('todos').select('id, task, priority, completed');
+    const { data, error } = await supabase.from('todos').select('id, task, dueDate, priority, completed');
     if (error) throw new Error(error.message);
     return data as Todo[];
 };
@@ -77,15 +77,15 @@ const destructureTodo = (todo: Omit<Todo, 'id'> | Todo) => {
 }
 
 export const addTodo = async (todo: Omit<Todo, 'id'>): Promise<Todo> => {
-    const newTodo = destructureTodo(todo);
-    const { data, error } = await supabase.from('todos').insert(newTodo);
+    //const newTodo = destructureTodo(todo);
+    const { data, error } = await supabase.from('todos').insert(todo);
     if (error) throw new Error(error.message);
     return data as Todo;
 };
 
 export const updateTodo = async (todo: Todo): Promise<Todo> => {
-    const newTodo = destructureTodo(todo);
-    const { data, error } = await supabase.from('todos').update(newTodo).eq('id', newTodo.id);
+    //const newTodo = destructureTodo(todo);
+    const { data, error } = await supabase.from('todos').update(todo).eq('id', todo.id);
     if (error) throw new Error(error.message);
     return data as Todo;
 };
