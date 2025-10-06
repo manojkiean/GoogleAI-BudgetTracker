@@ -4,6 +4,7 @@ import { Todo, Priority } from '../types';
 import { updateTodo, deleteTodo, addTodo } from '../utils/api';
 import { FaTrash, FaPencilAlt, FaPlus, FaTimes } from 'react-icons/fa';
 import AddEditTodoForm from './AddEditTodoForm';
+import { formatDate } from '../utils/date'; // Adjust the path if necessary
 
 const TodoItem: React.FC<{
     todo: Todo;
@@ -13,7 +14,7 @@ const TodoItem: React.FC<{
     isDashboard?: boolean;
 }> = ({ todo, onToggle, onEdit, onDelete, isDashboard }) => (
     <div className="flex items-center justify-between w-full bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-colors duration-200">
-        <div className="flex items-center flex-grow min-w-0">
+        <div className="flex items-center flex-1">
             <input
                 type="checkbox"
                 id={`todo-${todo.id}`}
@@ -27,21 +28,31 @@ const TodoItem: React.FC<{
                 </p>
             </label>
         </div>
-        {!isDashboard && (
+        {isDashboard ? (
+            <div className="flex items-center">
+                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getPriorityClass(todo.priority)}`}>
+                    {todo.priority}
+                </span>
+                <span className="text-sm text-gray-400 ml-4">
+                    { formatDate(todo.dueDate,'DD-MM-YYYY')}
+                </span>
+            </div>
+        ) : (
             <>
-                <div className="flex-shrink-0 mx-4">
+                <div className="flex items-center flex-1">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getPriorityClass(todo.priority)}`}>
                         {todo.priority}
                     </span>
                 </div>
-                <div className="flex items-center flex-shrink-0 space-x-3">
+                <div className="flex items-center flex-1">
+                    
                     <span className="text-sm text-gray-400">
-                        {new Date(todo.dueDate).toLocaleDateString()}
+                        { formatDate(todo.dueDate,'DD-MM-YYYY')}
                     </span>
-                    <button onClick={() => onEdit(todo)} className="text-gray-400 hover:text-cyan-400">
+                    <button onClick={() => onEdit(todo)} className="text-gray-400 hover:text-cyan-400 ml-2">
                         <FaPencilAlt />
                     </button>
-                    <button onClick={() => onDelete(todo.id)} className="text-gray-400 hover:text-red-500">
+                    <button onClick={() => onDelete(todo.id)} className="text-gray-400 hover:text-red-500 ml-2">
                         <FaTrash />
                     </button>
                 </div>
@@ -142,7 +153,7 @@ const TodoList: React.FC<TodoListProps> = ({ initialTodos, isDashboard = false, 
     return (
         <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-white">To-Do List</h2>
+               { !isDashboard ? <h2 className="text-2xl font-bold text-white">To-Do List</h2> : '' }
                 {!isDashboard && (
                     <button onClick={() => { setEditingTodo(null); setIsFormVisible(!isFormVisible); }} className="p-2 rounded-full bg-gray-700 hover:bg-cyan-500 text-white transition-colors">
                         {isFormVisible ? <FaTimes /> : <FaPlus />}

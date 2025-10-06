@@ -71,11 +71,6 @@ export const getTodos = async (): Promise<Todo[]> => {
     return data as Todo[];
 };
 
-const destructureTodo = (todo: Omit<Todo, 'id'> | Todo) => {
-    const { dueDate, ...rest } = todo as any;
-    return rest;
-}
-
 export const addTodo = async (todo: Omit<Todo, 'id'>): Promise<Todo> => {
     //const newTodo = destructureTodo(todo);
     const { data, error } = await supabase.from('todos').insert(todo);
