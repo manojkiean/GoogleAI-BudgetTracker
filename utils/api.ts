@@ -6,20 +6,57 @@ import { Transaction, Todo, AccountDetails } from '../types';
 export const getTransactions = async (): Promise<Transaction[]> => {
     const { data, error } = await supabase.from('transactions').select('*');
     if (error) throw new Error(error.message);
-    return data as Transaction[];
+    if (!data) {
+        return [];
+    }
+    // Manually map snake_case to camelCase
+    return data.map(t => ({
+        ...t,     
+        renewalDate: (t as any).renewal_date
+    })) as Transaction[];
 };
 
 export const addTransaction = async (transaction: Omit<Transaction, 'id'>): Promise<Transaction> => {
-    const { data, error } = await supabase.from('transactions').insert(transaction).single();
+    const { nextPayment, subscriptionType, renewalDate, ...rest } = transaction;
+    const transactionData: any = { ...rest };
+    if (nextPayment !== undefined) {
+        transactionData.nextPayment = nextPayment;
+    }
+    if (subscriptionType !== undefined) {
+        transactionData.subscriptionType = subscriptionType;
+    }
+    if (renewalDate !== undefined) {
+        transactionData.renewalDate = renewalDate;
+    }
+    const { data, error } = await supabase.from('transactions').insert(transactionData).select();
     if (error) throw new Error(error.message);
-    return data as Transaction;
+    if (!data) {
+        throw new Error('Failed to add transaction: Database returned null.');
+    }
+    const { nextpayment, subscriptiontype, renewal_date, ...returnData } = data[0] as any;
+    return { ...returnData, nextPayment: nextpayment, subscriptionType: subscriptiontype, renewalDate: renewal_date } as Transaction;
 };
 
 export const updateTransaction = async (transaction: Transaction): Promise<Transaction> => {
-    const { id, ...updateData } = transaction;
-    const { data, error } = await supabase.from('transactions').update(updateData).eq('id', id).single();
+    const { id, nextPayment, subscriptionType, renewalDate, ...updateData } = transaction;
+    const transactionData: any = { ...updateData };
+
+    if (nextPayment !== undefined) {
+        transactionData.nextPayment = nextPayment;
+    }
+    if (subscriptionType !== undefined) {
+        transactionData.subscriptionType = subscriptionType;
+    }
+    if (renewalDate !== undefined) {
+        transactionData.renewalDate = renewalDate;
+    }
+    const { data, error } = await supabase.from('transactions').update(transactionData).eq('id', id).select();
     if (error) throw new Error(error.message);
-    return data as Transaction;
+    if (!data) {
+        throw new Error('Failed to update transaction: Database returned null.');
+    }
+    const { nextpayment, subscriptiontype, renewal_date, ...returnData } = data[0] as any;
+    return { ...returnData, nextPayment: nextpayment, subscriptionType: subscriptiontype, renewalDate: renewal_date } as Transaction;
 };
 
 export const deleteTransaction = async (id: number): Promise<void> => {
@@ -41,14 +78,14 @@ const destructureTodo = (todo: Omit<Todo, 'id'> | Todo) => {
 
 export const addTodo = async (todo: Omit<Todo, 'id'>): Promise<Todo> => {
     const newTodo = destructureTodo(todo);
-    const { data, error } = await supabase.from('todos').insert(newTodo).single();
+    const { data, error } = await supabase.from('todos').insert(newTodo);
     if (error) throw new Error(error.message);
     return data as Todo;
 };
 
 export const updateTodo = async (todo: Todo): Promise<Todo> => {
     const newTodo = destructureTodo(todo);
-    const { data, error } = await supabase.from('todos').update(newTodo).eq('id', newTodo.id).single();
+    const { data, error } = await supabase.from('todos').update(newTodo).eq('id', newTodo.id);
     if (error) throw new Error(error.message);
     return data as Todo;
 };

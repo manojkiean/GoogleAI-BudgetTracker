@@ -1,3 +1,4 @@
+
 export enum Tab {
   DASHBOARD = 'Dashboard',
   TRANSACTIONS = 'Transactions',
@@ -24,13 +25,13 @@ export enum TransactionType {
 
 export interface Transaction {
   id: number;
-  type: TransactionType;
+  type?: TransactionType;
   source: string;
   category: string;
   amount: number;
   date: string;
-  account_id: number;
-  frequency?: 'Monthly' | 'Yearly';
+  account: string;
+  frequency?: 'Weekly' | 'Monthly' | 'Yearly';
   nextPayment?: string;
   status?: 'Active' | 'Cancelled';
   subscriptionType?: 'Recurring' | 'One Off';
@@ -40,7 +41,7 @@ export interface Transaction {
 export interface GoalDetails {
     id: number;
     category: string;
-    amount: number;
+    depositAmount: number;
     goalAmount: number;
     type: 'Income' | 'Expense';
 }

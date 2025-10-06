@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Transaction, Account, IncomeSource, TransactionType, Goal } from '../types';
 import { incomeSourceOptions } from '../constants';
 import TransactionList from './TransactionList';
+import { formatDate } from '../utils/date';
 
 interface AddEditIncomeFormProps {
   income?: Transaction | null;
@@ -22,7 +23,6 @@ const AddEditIncomeForm: React.FC<AddEditIncomeFormProps> = ({ income, transacti
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [account, setAccount] = useState<Account>(Account.HSBC);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
-  const [incomeTransactions, setIncomeTransactions] = useState<Transaction[]>([]);
 
   const resetForm = () => {
     setSource('');
@@ -37,16 +37,15 @@ const AddEditIncomeForm: React.FC<AddEditIncomeFormProps> = ({ income, transacti
       setSource(income.source);
       setCategory(income.category as IncomeSource);
       setAmount(String(income.amount));
-      setDate(new Date(income.date).toISOString().split('T')[0]);
+      setDate(formatDate(income.date, 'YYYY-MM-DD')); // Directly use the date string
       setAccount(income.account as Account);
     } else {
       resetForm();
     }
-    setMessage(null);
   }, [income]);
 
-  useEffect(() => {
-    setIncomeTransactions(transactions.filter(t => t && t.type === TransactionType.INCOME));
+  const incomeTransactions = useMemo(() => {
+    return transactions.filter(t => t.type === TransactionType.INCOME);
   }, [transactions]);
 
   const handleSubmit = async (e: React.FormEvent) => {

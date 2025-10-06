@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Currency, Transaction, TransactionType } from '../types';
 import { expenseSourceOptions, incomeSourceOptions } from '../constants';
+import { formatDate } from '../utils/date';
 
 interface TransactionsProps {
   currency: Currency;
@@ -81,8 +82,8 @@ const Transactions: React.FC<TransactionsProps> = ({ currency, transactions }) =
                 <td className="p-4 whitespace-nowrap text-sm text-gray-300">{transaction.type}</td>
                 <td className="p-4 whitespace-nowrap text-sm text-gray-300">{transaction.source}</td>
                 <td className="p-4 whitespace-nowrap text-sm text-gray-300">{transaction.category}</td>
-                <td className="p-4 whitespace-nowrap text-sm text-gray-300">{currency.symbol}{transaction.amount.toFixed(2)}</td>
-                <td className="p-4 whitespace-nowrap text-sm text-gray-300">{transaction.date}</td>
+                <td className="p-4 whitespace-nowrap text-sm text-white">{currency.symbol}{transaction.amount.toFixed(2)}</td>
+                <td className="p-4 whitespace-nowrap text-sm text-gray-300">{formatDate(transaction.date)}</td>
                 <td className="p-4 whitespace-nowrap text-sm text-gray-300">{transaction.account}</td>
               </tr>
             ))}

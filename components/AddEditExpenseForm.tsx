@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Transaction, Account, ExpenseSource, TransactionType, Goal } from '../types';
 import { expenseSourceOptions } from '../constants';
 import TransactionList from './TransactionList';
+import { formatDate } from '../utils/date';
 
 interface AddEditExpenseFormProps {
   expense?: Transaction | null;
@@ -22,7 +23,6 @@ const AddEditExpenseForm: React.FC<AddEditExpenseFormProps> = ({ expense, transa
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [account, setAccount] = useState<Account>(Account.HSBC);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
-  const [expenseTransactions, setExpenseTransactions] = useState<Transaction[]>([]);
 
   const resetForm = () => {
     setSource('');
@@ -37,16 +37,15 @@ const AddEditExpenseForm: React.FC<AddEditExpenseFormProps> = ({ expense, transa
       setSource(expense.source);
       setCategory(expense.category as ExpenseSource);
       setAmount(String(expense.amount));
-      setDate(new Date(expense.date).toISOString().split('T')[0]);
+      setDate(formatDate(expense.date, 'YYYY-MM-DD')); // Directly use the date string
       setAccount(expense.account as Account);
     } else {
       resetForm();
     }
-    setMessage(null);
   }, [expense]);
 
-  useEffect(() => {
-    setExpenseTransactions(transactions.filter(t => t && t.type === TransactionType.EXPENSE));
+  const expenseTransactions = useMemo(() => {
+    return transactions.filter(t => t.type === TransactionType.EXPENSE);
   }, [transactions]);
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -8,6 +8,7 @@ import { Currency, ExpenseSource, Todo, GoalDetails, Transaction, TransactionTyp
 import TodoList from './TodoList';
 import GoalList from './GoalList';
 import Calendar from './Calendar';
+import { formatDate } from '../utils/date';
 
 interface DashboardProps {
   currency: Currency;
@@ -15,14 +16,6 @@ interface DashboardProps {
   todos: Todo[];
   transactions: Transaction[];
 }
-
-const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-};
 
 const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos, transactions }) => {
   const [showIncomeDetails, setShowIncomeDetails] = useState(true);
@@ -60,7 +53,8 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
       netBalance: netBalanceValue,
       subscriptions: subscriptionTrans,
       incomeTransactions: incomeTrans,
-      expenseTransactions: [...expenseTrans, ...subscriptionTrans],
+      expenseTransactions: expenseTrans,
+      //expenseTransactions: [...expenseTrans, ...subscriptionTrans],
     };
   }, [transactions]);
 
@@ -135,7 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
                               <li key={sub.id} className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center bg-gray-800 p-4 rounded-lg">
                                   <span className="text-white font-medium sm:col-span-1">{sub.source}</span>
                                   <span className="text-gray-400 text-right sm:text-center">Monthly</span>
-                                  <span className="text-gray-400 sm:text-center">Next: {formatDate(new Date(sub.date).toLocaleDateString())}</span>
+                                  <span className="text-gray-400 sm:text-center">Next: {formatDate(sub.nextPayment, 'DD-MM-YYYY')}</span>
                                   <span className="text-red-400 font-semibold text-right">{currency.symbol} {sub.amount.toFixed(2)}</span>
                               </li>
                           ))}
@@ -153,7 +147,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
             <div className="flex flex-col gap-6">
             <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-semibold flex items-center"><ExpensesIcon /> <span className="ml-2">Expense Breakdown</span></h3>
+                        <h3 className="text-xl font-semibold flex items-.center"><ExpensesIcon /> <span className="ml-2">Expense Breakdown</span></h3>
                     </div>
                     <ExpensePieChart currency={currency} onCategoryClick={onCategorySelect} expenses={expenseTransactions} />
                 </div>

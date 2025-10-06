@@ -5,6 +5,7 @@ import Navigation from './components/Navigation';
 import { Currency, Tab, ExpenseSource, User, Todo, Transaction, TransactionType, AccountDetails } from './types';
 import { mockUsers, mockData } from './utils/config';
 import { getTodos, addTodo, updateTodo, deleteTodo, getTransactions, addTransaction, updateTransaction, deleteTransaction, getAccounts } from './utils/api';
+import { formatDate } from './utils/date';
 
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const Transactions = lazy(() => import('./components/Transactions'));
@@ -103,10 +104,12 @@ const App: React.FC = () => {
   
   const onSave = async (transaction: Omit<Transaction, 'id'> & { id?: number }) => {
     try {
-      if (transaction.id) {
-        await updateTransaction(transaction as Transaction);
+      const transactionWithFormattedDate = { ...transaction, date: formatDate(transaction.date) };
+
+      if (transactionWithFormattedDate.id) {
+        await updateTransaction(transactionWithFormattedDate as Transaction);
       } else {
-        await addTransaction(transaction as Omit<Transaction, 'id'>);
+        await addTransaction(transactionWithFormattedDate as Omit<Transaction, 'id'>);
       }
       await fetchTransactions();
       setEditingTransaction(null); // Always reset the form state

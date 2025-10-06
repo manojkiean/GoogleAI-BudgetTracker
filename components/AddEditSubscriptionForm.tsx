@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Transaction, Account, ExpenseSource, Goal, TransactionType } from '../types';
 import { expenseSourceOptions } from '../constants';
 import TransactionList from './TransactionList';
+import { formatDate } from '../utils/date';
 
 interface AddEditSubscriptionFormProps {
   subscription?: Transaction | null;
@@ -16,55 +17,85 @@ interface AddEditSubscriptionFormProps {
 const subscriptionSourceOptions = expenseSourceOptions.filter(s => s.goal === Goal.SUBSCRIPTIONS);
 
 const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subscription, transactions, onSave, onCancel, onDelete, onEdit }) => {
-  const [source, setSource] = useState<ExpenseSource | ''>('');
+  const [category, setCategory] = useState<ExpenseSource | ''>(subscriptionSourceOptions.length > 0 ? subscriptionSourceOptions[0].source : '');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [account, setAccount] = useState<Account>(Account.HSBC);
+  const [subscriptionType, setSubscriptionType] = useState<'Recurring' | 'One Off'>('Recurring');
+  const [frequency, setFrequency] = useState<'Weekly' | 'Monthly' | 'Yearly'>('Monthly');
+  const [nextPayment, setNextPayment] = useState('');
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
-  const [subscriptionTransactions, setSubscriptionTransactions] = useState<Transaction[]>([]);
 
   const resetForm = () => {
-    setSource(subscriptionSourceOptions.length > 0 ? subscriptionSourceOptions[0].source : '');
+    setCategory(subscriptionSourceOptions.length > 0 ? subscriptionSourceOptions[0].source : '');
     setAmount('');
     setDate(new Date().toISOString().split('T')[0]);
     setAccount(Account.HSBC);
+    setSubscriptionType('Recurring');
+    setFrequency('Monthly');
+    setNextPayment('');
+  };
+
+  const calculateNextPayment = (startDate: string, frequency: 'Weekly' | 'Monthly' | 'Yearly'): string => {
+    const date = new Date(startDate);
+    if (frequency === 'Weekly') {
+      date.setDate(date.getDate() + 7);
+    } else if (frequency === 'Monthly') {
+      date.setMonth(date.getMonth() + 1);
+    } else if (frequency === 'Yearly') {
+      date.setFullYear(date.getFullYear() + 1);
+    }
+    return date.toISOString().split('T')[0];
   };
 
   useEffect(() => {
     if (subscription) {
-      setSource(subscription.source as ExpenseSource);
+      setCategory(subscription.category as ExpenseSource);
       setAmount(String(subscription.amount));
-      setDate(new Date(subscription.date).toISOString().split('T')[0]);
+      setDate(formatDate(subscription.date, 'YYYY-MM-DD'));
       setAccount(subscription.account as Account);
+      setSubscriptionType(subscription.subscriptionType || 'Recurring');
+      setFrequency(subscription.frequency || 'Monthly');
+      setNextPayment(subscription.nextPayment ? formatDate(subscription.nextPayment, 'YYYY-MM-DD') : '');
     } else {
       resetForm();
     }
-    // Clear message when the form is reset or a new item is being edited
-    setMessage(null);
   }, [subscription]);
 
   useEffect(() => {
-    setSubscriptionTransactions(transactions.filter(t => t.type === TransactionType.SUBSCRIPTION));
+    if (subscriptionType === 'Recurring' && date) {
+      const calculatedNextPayment = calculateNextPayment(date, frequency);
+      setNextPayment(calculatedNextPayment);
+    } else {
+      setNextPayment('');
+    }
+  }, [date, frequency, subscriptionType]);
+
+  const subscriptionTransactions = useMemo(() => {
+    return transactions.filter(t => t.type === TransactionType.SUBSCRIPTION);
   }, [transactions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!source || !amount || isNaN(parseFloat(amount))) return;
+    if (!category || !amount || isNaN(parseFloat(amount))) return;
     
     const success = await onSave({
       id: subscription?.id,
-      source,
+      source: category,
       amount: parseFloat(amount),
       date,
       account,
-      category: source as ExpenseSource,
+      category,
       type: TransactionType.SUBSCRIPTION,
+      subscriptionType,
+      frequency,
+      nextPayment: nextPayment || undefined,
     });
 
     if (success) {
       setMessage({ text: 'Subscription saved successfully!', type: 'success' });
       if (!subscription) {
-        resetForm(); // Reset form only when adding a new item
+        resetForm();
       }
     } else {
       setMessage({ text: 'Failed to save subscription.', type: 'error' });
@@ -88,15 +119,15 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="source" className="block text-sm font-medium text-gray-300 mb-2">Subscription Item</label>
-                    <select 
-                        id="source"
-                        value={source}
-                        onChange={(e) => setSource(e.target.value as ExpenseSource)}
-                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
-                    >
-                        {subscriptionSourceOptions.map(s => <option key={s.source} value={s.source}>{s.source}</option>)}
-                    </select>
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-2">Category</label>
+                  <select 
+                      id="category"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value as ExpenseSource)}
+                      className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                  >
+                      {subscriptionSourceOptions.map(s => <option key={s.source} value={s.source}>{s.source}</option>)}
+                  </select>
                 </div>
                 <div>
                     <label htmlFor="amount" className="block text-sm font-medium text-gray-300 mb-2">Amount</label>
@@ -111,9 +142,36 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
                     />
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
+                    <label htmlFor="subscriptionType" className="block text-sm font-medium text-gray-300 mb-2">Subscription Type</label>
+                    <select 
+                        id="subscriptionType"
+                        value={subscriptionType}
+                        onChange={(e) => setSubscriptionType(e.target.value as 'Recurring' | 'One Off')}
+                        className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                    >
+                        <option value="Recurring">Recurring</option>
+                        <option value="One Off">One Off</option>
+                    </select>
+                </div>
+                {subscriptionType === 'Recurring' && (
+                        <div>
+                            <label htmlFor="frequency" className="block text-sm font-medium text-gray-300 mb-2">Frequency</label>
+                            <select 
+                                id="frequency"
+                                value={frequency}
+                                onChange={(e) => setFrequency(e.target.value as 'Weekly' | 'Monthly' | 'Yearly')}
+                                className="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"
+                            >
+                                <option value="Weekly">Weekly</option>
+                                <option value="Monthly">Monthly</option>
+                                <option value="Yearly">Yearly</option>
+                            </select>
+                        </div>
+                )}
+                <div>
+                    <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-2">Payment Date</label>
                     <input 
                         type="date"
                         id="date"
@@ -123,6 +181,8 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
                         required
                     />
                 </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label htmlFor="account" className="block text-sm font-medium text-gray-300 mb-2">Account</label>
                     <select 
@@ -134,6 +194,18 @@ const AddEditSubscriptionForm: React.FC<AddEditSubscriptionFormProps> = ({ subsc
                         {Object.values(Account).map(acc => <option key={acc} value={acc}>{acc}</option>)}
                     </select>
                 </div>
+                {subscriptionType === 'Recurring' && (
+                        <div>
+                            <label htmlFor="nextPayment" className="block text-sm font-medium text-gray-300 mb-2">Next Payment</label>
+                            <input
+                                type="date"
+                                id="nextPayment"
+                                value={nextPayment}
+                                readOnly
+                                className="bg-gray-900 border border-gray-700 text-gray-400 text-sm rounded-lg block w-full p-2.5"
+                            />
+                        </div>
+                )}
             </div>
             <div className="flex justify-end space-x-4 pt-2">
             <button

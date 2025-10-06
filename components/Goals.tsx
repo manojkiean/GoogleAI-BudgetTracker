@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { GoalDetails, Currency, Goal } from '../types';
+import { GoalDetails, Currency, Goal, Transaction } from '../types';
 import GoalForm from './GoalForm';
 import GoalList from './GoalList';
 import { incomeSourceOptions as incomeOptionsConstant, expenseSourceOptions as expenseOptionsConstant } from '../constants';
@@ -30,12 +29,22 @@ const Goals: React.FC<GoalsProps> = ({ currency }) => {
     localStorage.setItem('goals', JSON.stringify(goals));
   }, [goals]);
 
+  const fetchTransactions = (): Transaction[] => {
+    const transactions = localStorage.getItem('transactions');
+    return transactions ? JSON.parse(transactions) as Transaction[] : mockData.transactions as Transaction[];
+  };
+
   const handleSaveGoal = (goal: Omit<GoalDetails, 'id'> & { id?: number }) => {
+    const transactions = fetchTransactions();
+    const depositAmount = transactions
+      .filter(t => t.category === goal.category && t.type === goal.type.toLowerCase())
+      .reduce((acc, t) => acc + t.amount, 0);
+
     if (goal.id) {
-      setGoals(goals.map(g => g.id === goal.id ? { ...g, ...goal } as GoalDetails : g));
+      setGoals(goals.map(g => g.id === goal.id ? { ...g, ...goal, depositAmount } as GoalDetails : g));
     } else {
-      const newGoal = { ...goal, id: goals.length > 0 ? Math.max(...goals.map(g => g.id)) + 1 : 1 };
-      setGoals([...goals, newGoal]);
+      const newGoal = { ...goal, id: goals.length > 0 ? Math.max(...goals.map(g => g.id)) + 1 : 1, depositAmount };
+      setGoals([...goals, newGoal as GoalDetails]);
     }
     setEditingGoal(null);
   };
