@@ -25,5 +25,6 @@
     "noEmit": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
-  }
+  },
+  "include": ["src"]
 }

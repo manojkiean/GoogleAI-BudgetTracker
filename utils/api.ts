@@ -68,21 +68,28 @@ export const deleteTransaction = async (id: number): Promise<void> => {
 export const getTodos = async (): Promise<Todo[]> => {
     const { data, error } = await supabase.from('todos').select('id, task, dueDate, priority, completed');
     if (error) throw new Error(error.message);
+    if (!data) {
+        return [];
+    }
     return data as Todo[];
 };
 
 export const addTodo = async (todo: Omit<Todo, 'id'>): Promise<Todo> => {
-    //const newTodo = destructureTodo(todo);
-    const { data, error } = await supabase.from('todos').insert(todo);
+    const { data, error } = await supabase.from('todos').insert(todo).select();
     if (error) throw new Error(error.message);
-    return data as Todo;
+    if (!data) {
+        throw new Error('Failed to add todo: Database returned null.');
+    }
+    return data[0] as Todo;
 };
 
 export const updateTodo = async (todo: Todo): Promise<Todo> => {
-    //const newTodo = destructureTodo(todo);
-    const { data, error } = await supabase.from('todos').update(todo).eq('id', todo.id);
+    const { data, error } = await supabase.from('todos').update(todo).eq('id', todo.id).select();
     if (error) throw new Error(error.message);
-    return data as Todo;
+    if (!data) {
+        throw new Error('Failed to update todo: Database returned null.');
+    }
+    return data[0] as Todo;
 };
 
 export const deleteTodo = async (id: number): Promise<void> => {
@@ -94,5 +101,8 @@ export const deleteTodo = async (id: number): Promise<void> => {
 export const getAccounts = async (): Promise<AccountDetails[]> => {
     const { data, error } = await supabase.from('accounts').select('id, name, type, balance, gradient');
     if (error) throw new Error(error.message);
+    if (!data) {
+        return [];
+    }
     return data as AccountDetails[];
 };

@@ -3,9 +3,9 @@ import React, { useState, useCallback, lazy, Suspense, useEffect } from 'react';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
 import { Currency, Tab, ExpenseSource, User, Todo, Transaction, TransactionType, AccountDetails } from './types';
-import { mockUsers, mockData } from './utils/config';
 import { getTodos, addTodo, updateTodo, deleteTodo, getTransactions, addTransaction, updateTransaction, deleteTransaction, getAccounts } from './utils/api';
 import { formatDate } from './utils/date';
+import { supabase } from './utils/supabase';
 
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const Transactions = lazy(() => import('./components/Transactions'));
@@ -40,6 +40,34 @@ const App: React.FC = () => {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
+          const user = {
+            userId: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata.full_name,
+            avatar: session.user.user_metadata.avatar_url,
+            currency: 'USD',
+          };
+          setCurrentUser(user);
+          setIsLoggedIn(true);
+          setActiveTab(Tab.DASHBOARD);
+        } else {
+          setCurrentUser(null);
+          setIsLoggedIn(false);
+          setActiveTab(Tab.DASHBOARD);
+        }
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+
+  useEffect(() => {
     if (isLoggedIn) {
       fetchTodos();
       fetchTransactions();
@@ -62,19 +90,20 @@ const App: React.FC = () => {
     setAccounts(accounts);
   };
 
-  const handleLogin = (userId: string) => {
-    const user = mockUsers.find(u => u.userId === userId);
-    if (user) {
-        setCurrentUser({ ...user, currency: currency.code });
-        setIsLoggedIn(true);
-        setActiveTab(Tab.DASHBOARD);
-    }
+  const handleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+        options: {
+          redirectTo: import.meta.env.VITE_ENV_SITE_URL
+      }
+    });
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setIsLoggedIn(false);
     setCurrentUser(null);
-    setActiveTab(Tab.DASHBOARD); 
+    setActiveTab(Tab.DASHBOARD);
   };
 
   const handleUpdateUser = (user: User) => {
@@ -112,7 +141,7 @@ const App: React.FC = () => {
         await addTransaction(transactionWithFormattedDate as Omit<Transaction, 'id'>);
       }
       await fetchTransactions();
-      setEditingTransaction(null); // Always reset the form state
+      setEditingTransaction(null);
       return true;
     } catch (error) {
       console.error(error);
