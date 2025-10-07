@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { Transaction, Currency, AccountDetails } from '../types';
+import { Transaction, Currency, AccountDetails } from '../utils/types';
 import { convertAmount } from '../utils/currency';
 
 interface AccountsProps {

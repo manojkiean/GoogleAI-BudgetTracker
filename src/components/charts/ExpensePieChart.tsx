@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, Sector } from 'recharts';
-import { PIE_CHART_COLORS, expenseSourceOptions } from '../../constants';
-import type { Currency, Expense, ExpenseSource } from '../../types';
+import { PIE_CHART_COLORS, expenseSourceOptions } from '../../utils/constants';
+import type { Currency, Transaction, ExpenseSource } from '../../utils/types';
 import { formatCurrency, convertAmount } from '../../utils/currency';
 
 interface ExpensePieChartProps {
     currency: Currency;
     onCategoryClick: (category: ExpenseSource) => void;
-    expenses: Expense[];
+    expenses: Transaction[];
 }
 
 const CustomTooltip = ({ active, payload, currency }: any) => {
@@ -97,7 +97,7 @@ const ExpensePieChart: React.FC<ExpensePieChartProps> = ({ currency, onCategoryC
                 >
                     {dataByCategory.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={PIE_CHART_COLORS[index % PIE_CHART_COLORS.length]} />
-                    ))}
+                    )) }
                 </Pie>
             </PieChart>
         </ResponsiveContainer>

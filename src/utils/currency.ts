@@ -1,5 +1,5 @@
-import type { Currency } from '../types';
-import { conversionRates } from '../constants';
+import type { Currency } from './types';
+import { conversionRates } from './constants';
 
 export const formatCurrency = (amount: number, currency: Currency): string => {
   return new Intl.NumberFormat('en-US', {

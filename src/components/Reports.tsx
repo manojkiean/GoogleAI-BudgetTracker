@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Currency, Transaction } from '../types';
+import { Currency, Transaction } from '../utils/types';
 
 interface ReportsProps {
   currency: Currency;

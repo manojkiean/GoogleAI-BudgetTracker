@@ -1,6 +1,6 @@
 
 import { supabase } from './supabase';
-import { Transaction, Todo, AccountDetails } from '../types';
+import { Transaction, Todo, AccountDetails, User } from '../utils/types';
 
 // Transactions
 export const getTransactions = async (): Promise<Transaction[]> => {
@@ -13,7 +13,7 @@ export const getTransactions = async (): Promise<Transaction[]> => {
     }
     // Manually map snake_case to camelCase
     return data.map(t => ({
-        ...t,     
+        ...t,
         renewalDate: (t as any).renewal_date
     })) as Transaction[];
 };
@@ -126,4 +126,17 @@ export const getAccounts = async (): Promise<AccountDetails[]> => {
         return [];
     }
     return data as AccountDetails[];
+};
+
+// Users
+export const updateUser = async (user: User): Promise<User> => {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) throw new Error('User not logged in');
+
+    const { data, error } = await supabase.from('users').update({ name: user.name }).eq('user_id', authUser.id).select();
+    if (error) throw new Error(error.message);
+    if (!data) {
+        throw new Error('Failed to update user: Database returned null.');
+    }
+    return data[0] as User;
 };

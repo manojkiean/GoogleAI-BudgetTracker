@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { expenseSourceOptions } from '../../constants';
-import type { Currency, Expense, ExpenseSource, Transaction } from '../../types';
+import { expenseSourceOptions } from '../../utils/constants';
+import type { Currency, ExpenseSource, Transaction } from '../../utils/types';
 import { convertAmount } from '../../utils/currency';
 
 interface BudgetBarChartProps {
@@ -38,10 +38,17 @@ const BudgetBarChart: React.FC<BudgetBarChartProps> = ({ currency, onCategoryCli
             'Food': 500,
             'Bills & Utilities': 300,
             'Transportation': 150,
-            'Entertainment': 100,
-            'Health & Wellness': 80,
-            'Shopping': 200,
-            'Other': 120,
+            'Insurance': 100,
+            'Personal Care': 80,
+            'Holidays': 200,
+            'Piggy Pot': 120,
+            'Rent or Mortgage': 1200,
+            'Gadgets': 0,
+            'Other': 0,
+            'Buying Car': 0,
+            'Netflix': 15,
+            'Council Tax': 150,
+            'Amazon Prime': 10,
         };
 
         return expenseSourceOptions.map(option => {

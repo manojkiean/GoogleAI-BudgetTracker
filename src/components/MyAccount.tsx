@@ -19,7 +19,8 @@ const MyAccount: React.FC<MyAccountProps> = ({ user, onUpdateUser, onLogout }) =
 
   const handleSave = () => {
     try {
-      onUpdateUser({ ...user, name, currency });
+      //onUpdateUser({ ...user, name, currency });
+      onUpdateUser({ ...user, name });
       setMessage({type: 'success', text: 'Account saved successfully!'})
     } catch (error) {
       setMessage({type: 'error', text: 'Failed to save account.'})

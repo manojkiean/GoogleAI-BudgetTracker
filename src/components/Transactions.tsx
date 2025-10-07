@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { Currency, Transaction, TransactionType } from '../types';
-import { expenseSourceOptions, incomeSourceOptions } from '../constants';
+import { Currency, Transaction, TransactionType } from '../utils/types';
+import { expenseSourceOptions, incomeSourceOptions } from '../utils/constants';
 import { formatDate } from '../utils/date';
 
 interface TransactionsProps {

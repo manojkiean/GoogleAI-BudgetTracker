@@ -1,10 +1,30 @@
-/// <reference path="src/vite-env.d.ts" />
+/// <reference path="vite-env.d.ts" />
 
 import React, { useState, useCallback, lazy, Suspense, useEffect } from 'react';
 import Header from './components/Header';
 import Navigation from './components/Navigation';
-import { Currency, Tab, ExpenseSource, User, Todo, Transaction, TransactionType, AccountDetails } from './types';
-import { getTodos, addTodo, updateTodo, deleteTodo, getTransactions, addTransaction, updateTransaction, deleteTransaction, getAccounts } from './utils/api';
+import {
+  Currency,
+  Tab,
+  ExpenseSource,
+  User,
+  Todo,
+  Transaction,
+  TransactionType,
+  AccountDetails,
+} from './utils/types';
+import {
+  getTodos,
+  addTodo,
+  updateTodo,
+  deleteTodo,
+  getTransactions,
+  addTransaction,
+  updateTransaction,
+  deleteTransaction,
+  getAccounts,
+  updateUser,
+} from './utils/api';
 import { formatDate } from './utils/date';
 import { supabase } from './utils/supabase';
 
@@ -41,32 +61,29 @@ const App: React.FC = () => {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
-          const user = {
-            userId: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata.full_name,
-            avatar: session.user.user_metadata.avatar_url,
-            currency: 'USD',
-          };
-          setCurrentUser(user);
-          setIsLoggedIn(true);
-          setActiveTab(Tab.DASHBOARD);
-        } else {
-          setCurrentUser(null);
-          setIsLoggedIn(false);
-          setActiveTab(Tab.DASHBOARD);
-        }
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const user = {
+          userId: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata.full_name,
+          avatar: session.user.user_metadata.avatar_url,
+          currency: 'GBP',
+        };
+        setCurrentUser(user);
+        setIsLoggedIn(true);
+        setActiveTab(Tab.DASHBOARD);
+      } else {
+        setCurrentUser(null);
+        setIsLoggedIn(false);
+        setActiveTab(Tab.DASHBOARD);
       }
-    );
+    });
 
     return () => {
       authListener.subscription.unsubscribe();
     };
   }, []);
-
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -95,11 +112,10 @@ const App: React.FC = () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: import.meta.env.VITE_ENV_SITE_URL, // ✅ no error now
+        redirectTo: import.meta.env.VITE_ENV_SITE_URL,
       },
     });
   };
-  
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -108,9 +124,10 @@ const App: React.FC = () => {
     setActiveTab(Tab.DASHBOARD);
   };
 
-  const handleUpdateUser = (user: User) => {
+  const handleUpdateUser = async (user: User) => {
+    //const updatedUser = await updateUser(user);
     setCurrentUser(user);
-    const newCurrency = currencies.find(c => c.code === user.currency);
+    const newCurrency = currencies.find((c) => c.code === user.currency);
     if (newCurrency) {
       setCurrency(newCurrency);
     }
@@ -128,20 +145,24 @@ const App: React.FC = () => {
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
-  
+
   const updateTodos = async () => {
     fetchTodos();
   };
-  
-  const onSave = async (transaction: Omit<Transaction, 'id'> & { id?: number }) => {
+
+  // ✅ FIXED: relaxed type for flexibility
+  const onSave = async (transaction: Partial<Transaction>) => {
     try {
-      const transactionWithFormattedDate = { ...transaction, date: formatDate(transaction.date) };
+      const transactionWithFormattedDate = transaction.date
+        ? { ...transaction, date: formatDate(transaction.date) }
+        : transaction;
 
       if (transactionWithFormattedDate.id) {
         await updateTransaction(transactionWithFormattedDate as Transaction);
       } else {
         await addTransaction(transactionWithFormattedDate as Omit<Transaction, 'id'>);
       }
+
       await fetchTransactions();
       setEditingTransaction(null);
       return true;
@@ -162,30 +183,87 @@ const App: React.FC = () => {
 
   const onEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
-    setActiveTab(transaction.type === 'income' ? Tab.INCOME : transaction.type === 'expense' ? Tab.EXPENSE : Tab.SUBSCRIPTION);
+    setActiveTab(
+      transaction.type === 'income'
+        ? Tab.INCOME
+        : transaction.type === 'expense'
+        ? Tab.EXPENSE
+        : Tab.SUBSCRIPTION
+    );
   };
 
   const renderContent = () => {
     const components: Record<Tab, React.ReactNode> = {
-      [Tab.DASHBOARD]: <Dashboard currency={currency} onCategorySelect={handleCategorySelect} todos={todos} transactions={transactions} />,
-      [Tab.TRANSACTIONS]: <Transactions currency={currency} transactions={transactions} />,
-      [Tab.INCOME]: <AddEditIncomeForm onSave={(income) => onSave({ ...income, type: TransactionType.INCOME })} onCancel={onCancel} transactions={transactions} onDelete={onDelete} onEdit={onEdit} income={editingTransaction} />,
-      [Tab.EXPENSE]: <AddEditExpenseForm onSave={(expense) => onSave({ ...expense, type: TransactionType.EXPENSE })} onCancel={onCancel} transactions={transactions} onDelete={onDelete} onEdit={onEdit} expense={editingTransaction} />,
-      [Tab.SUBSCRIPTION]: <AddEditSubscriptionForm onSave={(subscription) => onSave({ ...subscription, type: TransactionType.SUBSCRIPTION })} onCancel={onCancel} transactions={transactions} onDelete={onDelete} onEdit={onEdit} subscription={editingTransaction} />,
+      [Tab.DASHBOARD]: (
+        <Dashboard
+          currency={currency}
+          onCategorySelect={handleCategorySelect}
+          todos={todos}
+          transactions={transactions}
+        />
+      ),
+      [Tab.TRANSACTIONS]: (
+        <Transactions currency={currency} transactions={transactions} />
+      ),
+      [Tab.INCOME]: (
+        <AddEditIncomeForm
+          onSave={(income) => onSave({ ...income, type: TransactionType.INCOME })}
+          onCancel={onCancel}
+          transactions={transactions}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          income={editingTransaction}
+        />
+      ),
+      [Tab.EXPENSE]: (
+        <AddEditExpenseForm
+          onSave={(expense) => onSave({ ...expense, type: TransactionType.EXPENSE })}
+          onCancel={onCancel}
+          transactions={transactions}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          expense={editingTransaction}
+        />
+      ),
+      [Tab.SUBSCRIPTION]: (
+        <AddEditSubscriptionForm
+          onSave={(subscription) =>
+            onSave({ ...subscription, type: TransactionType.SUBSCRIPTION })
+          }
+          onCancel={onCancel}
+          transactions={transactions}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          subscription={editingTransaction}
+        />
+      ),
       [Tab.GOALS]: <Goals currency={currency} />,
-      [Tab.ACCOUNTS]: <Accounts currency={currency} transactions={transactions} accounts={accounts} />,
+      [Tab.ACCOUNTS]: (
+        <Accounts currency={currency} transactions={transactions} accounts={accounts} />
+      ),
       [Tab.REPORTS]: <Reports currency={currency} transactions={transactions} />,
       [Tab.TODO]: <TodoList initialTodos={todos} onUpdateTodos={updateTodos} />,
       [Tab.MY_ACCOUNT]: currentUser ? (
-        <MyAccount user={currentUser} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />
+        <MyAccount
+          user={currentUser}
+          onUpdateUser={handleUpdateUser}
+          onLogout={handleLogout}
+        />
       ) : null,
     };
+
     return components[activeTab] || components[Tab.DASHBOARD];
   };
 
   if (!isLoggedIn) {
     return (
-      <Suspense fallback={<div className="flex justify-center items-center h-screen bg-gray-900 text-white text-xl">Loading...</div>}>
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center h-screen bg-gray-900 text-white text-xl">
+            Loading...
+          </div>
+        }
+      >
         <Login onLogin={handleLogin} />
       </Suspense>
     );
@@ -194,10 +272,20 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-gray-200 font-sans flex flex-col xl:flex-row">
       <Navigation activeTab={activeTab} setActiveTab={handleSetTab} sidebarOpen={sidebarOpen} />
-      <main className={`flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${sidebarOpen ? 'xl:ml-64 2xl:ml-72' : 'xl:ml-20'}`}>
+      <main
+        className={`flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${
+          sidebarOpen ? 'xl:ml-64 2xl:ml-72' : 'xl:ml-20'
+        }`}
+      >
         <Header currentUser={currentUser} setActiveTab={handleSetTab} toggleSidebar={toggleSidebar} />
         <div className="mt-8 animate-fade-in">
-          <Suspense fallback={<div className="flex justify-center items-center h-full"><div className="text-white text-xl">Loading...</div></div>}>
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center h-full">
+                <div className="text-white text-xl">Loading...</div>
+              </div>
+            }
+          >
             {renderContent()}
           </Suspense>
         </div>

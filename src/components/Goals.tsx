@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { GoalDetails, Currency, Goal, Transaction, TransactionType } from '../types';
+import { GoalDetails, Currency, Goal, Transaction, TransactionType } from '../utils/types';
 import GoalForm from './GoalForm';
 import GoalList from './GoalList';
-import { incomeSourceOptions as incomeOptionsConstant, expenseSourceOptions as expenseOptionsConstant } from '../constants';
-import mockData from '../mock-data.json';
+import { incomeSourceOptions as incomeOptionsConstant, expenseSourceOptions as expenseOptionsConstant } from '../utils/constants';
+import mockData from '../../data/mock-data.json';
 
 interface GoalsProps {
   currency: Currency;

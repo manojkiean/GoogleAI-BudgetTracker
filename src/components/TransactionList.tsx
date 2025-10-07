@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Transaction, TransactionType } from '../types';
+import { Transaction, TransactionType } from '../utils/types';
 import { formatDate } from '../utils/date';
 
 interface TransactionListProps {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GoalDetails, Currency } from '../types';
+import { GoalDetails, Currency } from '../utils/types';
 
 interface GoalFormProps {
   type: 'Income' | 'Expense';

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Transaction, Todo } from '../types';
+import { Transaction, Todo } from '../utils/types';
 import { formatDate } from '../utils/date';
 import { TodoIcon, SubscriptionsIcon } from './icons/IconComponents';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { GoalDetails, Currency } from '../types';
+import { GoalDetails, Currency } from '../utils/types';
 
 interface GoalListProps {
   goals: GoalDetails[];

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Todo, Priority } from '../types';
+import { Todo, Priority } from '../utils/types';
 
 interface AddEditTodoFormProps {
   todo?: Todo | null;

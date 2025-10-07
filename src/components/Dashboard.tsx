@@ -4,7 +4,7 @@ import { DollarIcon, PoundIcon, EuroIcon, MenuIcon, IncomeIcon, ExpensesIcon, Su
 import SummaryCard from './SummaryCard';
 import ExpensePieChart from './charts/ExpensePieChart';
 import BudgetBarChart from './charts/BudgetBarChart';
-import { Currency, ExpenseSource, Todo, GoalDetails, Transaction, TransactionType } from '../types';
+import { Currency, ExpenseSource, Todo, GoalDetails, Transaction, TransactionType } from '../utils/types';
 import TodoList from './TodoList';
 import GoalList from './GoalList';
 import Calendar from './Calendar';

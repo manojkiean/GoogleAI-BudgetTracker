@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MenuIcon, SettingsIcon, CreditCardIcon } from './icons/IconComponents';
-import { Tab, User } from '../types';
+import { Tab, User } from '../utils/types';
 
 interface HeaderProps {
   toggleSidebar: () => void;

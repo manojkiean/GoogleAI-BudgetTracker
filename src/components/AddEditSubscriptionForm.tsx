@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Transaction, Account, ExpenseSource, Goal, TransactionType } from '../types';
-import { expenseSourceOptions } from '../constants';
+import { Transaction, Account, ExpenseSource, Goal, TransactionType } from '../utils/types';
+import { expenseSourceOptions } from '../utils/constants';
 import TransactionList from './TransactionList';
 import { formatDate } from '../utils/date';
 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Tab } from '../types';
+import { Tab } from '../utils/types';
 import { DashboardIcon, ExpensesIcon, GoalIcon, AccountsIcon, TodoIcon, MyAccountIcon, CalcIcon, ReportsIcon, IncomeIcon, SubscriptionsIcon } from './icons/IconComponents';
 
 interface NavigationProps {
