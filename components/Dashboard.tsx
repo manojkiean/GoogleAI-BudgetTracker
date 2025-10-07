@@ -124,16 +124,28 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
                       </button>
                   </div>
                   {showSubscriptions && (
-                      <ul className="space-y-4">
-                          {subscriptions.map(sub => (
-                              <li key={sub.id} className="grid grid-cols-2 sm:grid-cols-4 gap-4 items-center bg-gray-800 p-4 rounded-lg">
-                                  <span className="text-white font-medium sm:col-span-1">{sub.source}</span>
-                                  <span className="text-gray-400 text-right sm:text-center">Monthly</span>
-                                  <span className="text-gray-400 sm:text-center">Next: {formatDate(sub.nextPayment, 'DD-MM-YYYY')}</span>
-                                  <span className="text-red-400 font-semibold text-right">{currency.symbol} {sub.amount.toFixed(2)}</span>
-                              </li>
-                          ))}
-                      </ul>
+                      <div className="overflow-x-auto">
+                          <table className="w-full text-left">
+                              <thead>
+                                  <tr className="bg-gray-900">
+                                      <th className="p-4 font-semibold">Name</th>
+                                      <th className="p-4 font-semibold">Frequency</th>
+                                      <th className="p-4 font-semibold">Next Payment</th>
+                                      <th className="p-4 font-semibold text-right">Amount</th>
+                                  </tr>
+                              </thead>
+                              <tbody>
+                                  {subscriptions.map(sub => (
+                                      <tr key={sub.id} className="border-b border-gray-700">
+                                          <td className="p-4">{sub.source}</td>
+                                          <td className="p-4">Monthly</td>
+                                          <td className="p-4">{formatDate(sub.nextPayment, 'DD-MM-YYYY')}</td>
+                                          <td className="p-4 text-right text-red-400 font-semibold">{currency.symbol}{sub.amount.toFixed(2)}</td>
+                                      </tr>
+                                  ))}
+                              </tbody>
+                          </table>
+                      </div>
                   )}
               </div>
                 <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">

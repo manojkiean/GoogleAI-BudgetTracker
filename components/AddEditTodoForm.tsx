@@ -4,7 +4,7 @@ import { Todo, Priority } from '../types';
 
 interface AddEditTodoFormProps {
   todo?: Todo | null;
-  onSave: (todo: Omit<Todo, 'id' | 'completed'> & { id?: number }) => Promise<boolean>;
+  onSave: (todo: Omit<Todo, 'id'> & { id?: number }) => Promise<boolean>;
   onCancel: () => void;
 }
 
@@ -12,6 +12,7 @@ const AddEditTodoForm: React.FC<AddEditTodoFormProps> = ({ todo, onSave, onCance
   const [task, setTask] = useState('');
   const [priority, setPriority] = useState<Priority>(Priority.Medium);
   const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
+  const [completed, setCompleted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
 
@@ -20,6 +21,7 @@ const AddEditTodoForm: React.FC<AddEditTodoFormProps> = ({ todo, onSave, onCance
       setTask(todo.task);
       setPriority(todo.priority);
       setDueDate(new Date(todo.dueDate).toISOString().split('T')[0]);
+      setCompleted(todo.completed);
     } else {
       resetForm();
     }
@@ -29,6 +31,7 @@ const AddEditTodoForm: React.FC<AddEditTodoFormProps> = ({ todo, onSave, onCance
     setTask('');
     setPriority(Priority.Medium);
     setDueDate(new Date().toISOString().split('T')[0]);
+    setCompleted(false);
     setMessage(null);
   };
 
@@ -44,6 +47,7 @@ const AddEditTodoForm: React.FC<AddEditTodoFormProps> = ({ todo, onSave, onCance
       task,
       priority,
       dueDate,
+      completed,
     });
 
     if (success) {
@@ -110,6 +114,19 @@ const AddEditTodoForm: React.FC<AddEditTodoFormProps> = ({ todo, onSave, onCance
                     disabled={isSaving}
                 />
             </div>
+        </div>
+        <div className="flex items-center">
+            <input
+                id="completed"
+                type="checkbox"
+                checked={completed}
+                onChange={(e) => setCompleted(e.target.checked)}
+                className="w-4 h-4 text-cyan-600 bg-gray-700 border-gray-600 rounded focus:ring-cyan-500"
+                disabled={isSaving}
+            />
+            <label htmlFor="completed" className="ml-2 text-sm font-medium text-gray-300">
+                Completed
+            </label>
         </div>
         <div className="flex justify-end space-x-4 pt-2">
           <button

@@ -93,11 +93,12 @@ const App: React.FC = () => {
   const handleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-        options: {
-          redirectTo: import.meta.env.VITE_ENV_SITE_URL
-      }
+      options: {
+        redirectTo: import.meta.env.VITE_ENV_SITE_URL, // ✅ no error now
+      },
     });
   };
+  
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -127,7 +128,7 @@ const App: React.FC = () => {
     setSidebarOpen(!sidebarOpen);
   };
   
-  const updateTodos = async (updatedTodos: Todo[]) => {
+  const updateTodos = async () => {
     fetchTodos();
   };
   
@@ -188,9 +189,9 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 font-sans flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-gray-900 text-gray-200 font-sans flex flex-col xl:flex-row">
       <Navigation activeTab={activeTab} setActiveTab={handleSetTab} sidebarOpen={sidebarOpen} />
-      <main className={`flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${sidebarOpen ? 'lg:ml-64 xl:ml-72' : 'lg:ml-20'}`}>
+      <main className={`flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${sidebarOpen ? 'xl:ml-64 2xl:ml-72' : 'xl:ml-20'}`}>
         <Header currentUser={currentUser} setActiveTab={handleSetTab} toggleSidebar={toggleSidebar} />
         <div className="mt-8 animate-fade-in">
           <Suspense fallback={<div className="flex justify-center items-center h-full"><div className="text-white text-xl">Loading...</div></div>}>

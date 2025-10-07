@@ -25,6 +25,6 @@
     "noEmit": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
-  },
-  "include": ["src"]
+  },  
+  "include": ["src", "vite-env.d.ts"]
 }

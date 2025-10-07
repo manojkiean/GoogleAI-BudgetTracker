@@ -5,6 +5,7 @@ interface MyAccountProps {
   user: {
     userId: string;
     name: string;
+    email: string;
     currency: string;
   };
   onUpdateUser: (user: MyAccountProps['user']) => void;
@@ -41,6 +42,16 @@ const MyAccount: React.FC<MyAccountProps> = ({ user, onUpdateUser, onLogout }) =
             id="userId"
             type="text"
             value={user.userId}
+            disabled
+            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-gray-400 cursor-not-allowed"
+          />
+        </div>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={user.email}
             disabled
             className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-gray-400 cursor-not-allowed"
           />

@@ -76,7 +76,7 @@ const NavItem: React.FC<{
         aria-current={isActive ? 'page' : undefined}
     >
         {item.icon}
-        <span className={`ml-4 font-medium ${sidebarOpen ? 'lg:inline' : 'hidden'}`}>{item.tab}</span>
+        <span className={`ml-4 font-medium ${sidebarOpen ? 'xl:inline' : 'hidden'}`}>{item.tab}</span>
     </button>
 );
 
@@ -84,7 +84,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, sideba
   return (
     <>
       {/* Sidebar for large screens */}
-      <aside className={`hidden lg:flex flex-col bg-gray-800 p-4 fixed h-full transition-width duration-300 ${sidebarOpen ? 'w-64 xl:w-72' : 'w-20'}`}>
+      <aside className={`hidden xl:flex flex-col bg-gray-800 p-4 fixed h-full transition-width duration-300 ${sidebarOpen ? 'w-64 2xl:w-72' : 'w-20'}`}>
         <div className={`text-2xl font-bold text-white mb-10 flex items-center ${sidebarOpen ? 'justify-start' : 'justify-center'} pl-2'}`}>
             <CalcIcon />
             {sidebarOpen && <span className="ml-2">Budget Tracker</span>}
@@ -108,7 +108,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, sideba
       </aside>
 
       {/* Bottom Nav for mobile screens */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 flex justify-around p-2 z-50" aria-label="Main navigation">
+      <nav className="xl:hidden fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 flex justify-around p-2 z-50" aria-label="Main navigation">
         {navItems.map((item) => (
           <button
             key={item.tab}

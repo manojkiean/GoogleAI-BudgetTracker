@@ -5,6 +5,7 @@ import { updateTodo, deleteTodo, addTodo } from '../utils/api';
 import { FaTrash, FaPencilAlt, FaPlus, FaTimes } from 'react-icons/fa';
 import AddEditTodoForm from './AddEditTodoForm';
 import { formatDate } from '../utils/date'; // Adjust the path if necessary
+import { ChecklistIcon } from './icons/IconComponents';
 
 const TodoItem: React.FC<{
     todo: Todo;
@@ -15,14 +16,15 @@ const TodoItem: React.FC<{
 }> = ({ todo, onToggle, onEdit, onDelete, isDashboard }) => (
     <div className="flex items-center justify-between w-full bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-colors duration-200">
         <div className="flex items-center flex-1">
-            <input
+            {isDashboard && <ChecklistIcon className="w-5 h-5 text-gray-400 mr-3" />}
+            {!isDashboard && <input
                 type="checkbox"
                 id={`todo-${todo.id}`}
                 checked={!!todo.completed}
                 onChange={() => onToggle(todo.id, !todo.completed)}
                 className="w-5 h-5 rounded text-cyan-500 bg-gray-800 border-gray-600 focus:ring-cyan-600 cursor-pointer"
-            />
-            <label htmlFor={`todo-${todo.id}`} className="ml-4 cursor-pointer flex-1 min-w-0">
+            />}
+            <label htmlFor={`todo-${todo.id}`} className={`${isDashboard ? '' : 'ml-4'} cursor-pointer flex-1 min-w-0`}>
                 <p className={`font-medium truncate ${todo.completed ? 'line-through text-gray-500' : 'text-white'}`}>
                     {todo.task}
                 </p>

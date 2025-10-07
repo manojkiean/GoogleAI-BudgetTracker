@@ -64,7 +64,7 @@ export interface Todo {
   id: number;
   task: string;
   priority: Priority;
-  dueDate?: string;
+  dueDate?: any;
   completed: boolean;
 }
 
@@ -122,5 +122,6 @@ export enum Account {
 export interface User {
   userId: string;
   name: string;
+  email: string;
   currency: string;
 }
