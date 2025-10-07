@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GoalDetails, Currency, Goal, Transaction } from '../types';
+import { GoalDetails, Currency, Goal, Transaction, TransactionType } from '../types';
 import GoalForm from './GoalForm';
 import GoalList from './GoalList';
 import { incomeSourceOptions as incomeOptionsConstant, expenseSourceOptions as expenseOptionsConstant } from '../constants';
@@ -35,7 +35,23 @@ const Goals: React.FC<GoalsProps> = ({ currency }) => {
   };
 
   const handleSaveGoal = (goal: Omit<GoalDetails, 'id'> & { id?: number }) => {
-    const transactions = fetchTransactions();
+    let transactions = fetchTransactions();
+    const initialDeposit = goal.depositAmount || 0;
+
+    if (!goal.id && initialDeposit > 0) {
+      const newTransaction: Transaction = {
+        id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
+        type: goal.type === 'Income' ? TransactionType.INCOME : TransactionType.EXPENSE,
+        source: goal.name,
+        category: goal.category,
+        amount: initialDeposit,
+        date: new Date().toISOString().split('T')[0],
+        account: 'Default',
+      };
+      transactions = [...transactions, newTransaction];
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+
     const depositAmount = transactions
       .filter(t => t.category === goal.category && t.type === goal.type.toLowerCase())
       .reduce((acc, t) => acc + t.amount, 0);

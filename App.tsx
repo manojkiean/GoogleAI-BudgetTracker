@@ -1,3 +1,4 @@
+/// <reference path="src/vite-env.d.ts" />
 
 import React, { useState, useCallback, lazy, Suspense, useEffect } from 'react';
 import Header from './components/Header';
@@ -175,7 +176,9 @@ const App: React.FC = () => {
       [Tab.ACCOUNTS]: <Accounts currency={currency} transactions={transactions} accounts={accounts} />,
       [Tab.REPORTS]: <Reports currency={currency} transactions={transactions} />,
       [Tab.TODO]: <TodoList initialTodos={todos} onUpdateTodos={updateTodos} />,
-      [Tab.MY_ACCOUNT]: <MyAccount user={currentUser} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />,
+      [Tab.MY_ACCOUNT]: currentUser ? (
+        <MyAccount user={currentUser} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />
+      ) : null,
     };
     return components[activeTab] || components[Tab.DASHBOARD];
   };

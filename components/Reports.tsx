@@ -35,9 +35,9 @@ const Reports: React.FC<ReportsProps> = ({ currency, transactions }) => {
 
     let headers: string[] = [];
     if (selectedCategory === 'All') {
-        headers = ['type', 'source', 'category', 'amount', 'date', 'account', 'subscriptionType', 'renewalDate', 'frequency'];
+        headers = ['type', 'source', 'category', 'amount', 'date', 'account', 'subscriptionType', 'frequency'];
     } else if (selectedCategory === 'Subscriptions') {
-        headers = ['type', 'source', 'category', 'amount', 'date', 'account', 'subscriptionType', 'renewalDate', 'frequency'];
+        headers = ['type', 'source', 'category', 'amount', 'date', 'account', 'subscriptionType', 'frequency'];
     } else { // Income and Expense
         headers = ['type', 'source', 'category', 'amount', 'date', 'account'];
     }
@@ -47,7 +47,7 @@ const Reports: React.FC<ReportsProps> = ({ currency, transactions }) => {
       const row: any = {};
       headers.forEach(header => {
         const value = item[header as keyof Transaction];
-        if ((header === 'date' || header === 'renewalDate') && value) {
+        if (header === 'date' && value) {
             row[header] = formatDate(value as string);
         } else {
             row[header] = value !== undefined && value !== null ? value : '';

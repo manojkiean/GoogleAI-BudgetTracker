@@ -1,59 +1,67 @@
 
 import React, { useMemo } from 'react';
-import { Transaction, AccountDetails, Currency } from '../types';
+import { Transaction, Currency, AccountDetails } from '../types';
 import { convertAmount } from '../utils/currency';
 
 interface AccountsProps {
     transactions: Transaction[];
-    accounts: AccountDetails[];
     currency: Currency;
+    accounts: AccountDetails[];
 }
 
-const Accounts: React.FC<AccountsProps> = ({ transactions, accounts, currency }) => {
+const Accounts: React.FC<AccountsProps> = ({ transactions, currency, accounts }) => {
     const summarizedAccounts = useMemo(() => {
-        // 1. As you suggested, group transactions by account and sum the amounts.
         const summaryByAccount = transactions.reduce((acc, transaction) => {
-            const { account_id, type, amount } = transaction;
+            const { account, type, amount } = transaction;
 
-            if (!acc[account_id]) {
-                acc[account_id] = { income: 0, expense: 0 };
+            if (!acc[account]) {
+                acc[account] = { income: 0, expense: 0 };
             }
 
             const convertedAmount = convertAmount(amount, 'USD', currency.code);
 
             if (type === 'income') {
-                acc[account_id].income += convertedAmount;
+                acc[account].income += convertedAmount;
             } else {
-                acc[account_id].expense += convertedAmount;
+                acc[account].expense += convertedAmount;
             }
 
             return acc;
-        }, {} as Record<number, { income: number; expense: number }>);
+        }, {} as Record<string, { income: number; expense: number }>);
 
-        // 2. Map the summarized data to the account details for display.
-        return accounts
-            .map(account => {
-                const summary = summaryByAccount[account.id];
-                return {
-                    ...account,
-                    income: summary ? summary.income : 0,
-                    expense: summary ? summary.expense : 0,
-                };
-            })
+        return Object.keys(summaryByAccount)
+            .map(accountName => ({
+                name: accountName,
+                income: summaryByAccount[accountName].income,
+                expense: summaryByAccount[accountName].expense,
+            }))
             .filter(account => account.income !== 0 || account.expense !== 0);
 
-    }, [transactions, accounts, currency.code]);
+    }, [transactions, currency.code]);
+
+    const gradients = [
+        'from-cyan-500 to-blue-500',
+        'from-green-400 to-teal-500',
+        'from-purple-500 to-indigo-500',
+        'from-pink-500 to-rose-500',
+        'from-amber-500 to-orange-600',
+    ];
 
     return (
         <div className="p-4 md:p-6 bg-gray-800 text-white rounded-lg shadow-lg">
             <h2 className="text-xl md:text-2xl font-bold mb-4">Accounts Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {summarizedAccounts.map(account => (
-                    // The `key` prop is essential in React for list rendering.
-                    <div key={account.id} className="p-4 bg-gray-700 rounded-lg">
-                        <h3 className="font-bold text-lg mb-2">{account.name}</h3>
-                        <div className="text-green-400">Income: {currency.symbol}{account.income.toFixed(2)}</div>
-                        <div className="text-red-400">Expense: {currency.symbol}{account.expense.toFixed(2)}</div>
+                {summarizedAccounts.map((account, index) => (
+                    <div key={account.name} className={`p-4 rounded-lg shadow-lg bg-gradient-to-br ${gradients[index % gradients.length]}`}>
+                        <h3 className="font-bold text-lg mb-2 text-white">{account.name}</h3>
+                        <div className="flex justify-between items-center mb-1">
+                           <span className="text-white/80 text-sm">Income</span>
+                           <span className="font-semibold text-green-300">{currency.symbol}{account.income.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                           <span className="text-white/80 text-sm">Expense</span>
+                           <span className="font-semibold text-red-300">{currency.symbol}{account.expense.toFixed(2)}</span>
+                        </div>
                     </div>
                 ))}
             </div>

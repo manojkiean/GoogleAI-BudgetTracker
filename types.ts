@@ -40,6 +40,7 @@ export interface Transaction {
 
 export interface GoalDetails {
     id: number;
+    name: string;
     category: string;
     depositAmount: number;
     goalAmount: number;
