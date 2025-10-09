@@ -1,72 +1,83 @@
 import React, { useState, useEffect } from 'react';
-import { GoalDetails, Currency, Goal, Transaction, TransactionType } from '../utils/types';
-import GoalForm from './GoalForm';
+import { GoalDetails, Currency, Goal } from '../utils/types';
+import GoalSettings from './GoalSettings';
 import GoalList from './GoalList';
 import { incomeSourceOptions as incomeOptionsConstant, expenseSourceOptions as expenseOptionsConstant } from '../utils/constants';
-import mockData from '../../data/mock-data.json';
+import { getGoals, addGoal, updateGoal, deleteGoal } from '../utils/api';
 
 interface GoalsProps {
   currency: Currency;
 }
 
 const incomeSourceOptions = incomeOptionsConstant
-  .filter(item => item.goal === Goal.SAVINGS)
-  .map(item => item.source);
+    .filter((item: any) => item.goal === Goal.SAVINGS)
+    .map((item: any) => item.source);
 
 const expenseSourceOptions = expenseOptionsConstant
-  .filter(item => item.goal === Goal.SAVINGS)
-  .map(item => item.source);
+    .filter((item: any) => item.goal === Goal.SAVINGS)
+    .map((item: any) => item.source);
 
 const Goals: React.FC<GoalsProps> = ({ currency }) => {
   const [activeTab, setActiveTab] = useState('Income');
-  const [goals, setGoals] = useState<GoalDetails[]>(() => {
-    const savedGoals = localStorage.getItem('goals');
-    return savedGoals ? JSON.parse(savedGoals) : mockData.goals;
-  });
+  const [goals, setGoals] = useState<GoalDetails[]>([]);
   const [editingGoal, setEditingGoal] = useState<GoalDetails | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
 
   useEffect(() => {
-    localStorage.setItem('goals', JSON.stringify(goals));
-  }, [goals]);
+    fetchGoals();
+  }, []);
 
-  const fetchTransactions = (): Transaction[] => {
-    const transactions = localStorage.getItem('transactions');
-    return transactions ? JSON.parse(transactions) as Transaction[] : mockData.transactions as Transaction[];
+  const fetchGoals = async () => {
+    try {
+      const goalsFromApi = await getGoals();
+      setGoals(goalsFromApi);
+    } catch (error) {
+      setMessage('Failed to fetch goals.');
+      setMessageType('error');
+    }
   };
 
-  const handleSaveGoal = (goal: Omit<GoalDetails, 'id'> & { id?: number }) => {
-    let transactions = fetchTransactions();
-    const initialDeposit = goal.depositAmount || 0;
-
-    if (!goal.id && initialDeposit > 0) {
-      const newTransaction: Transaction = {
-        id: transactions.length > 0 ? Math.max(...transactions.map(t => t.id)) + 1 : 1,
-        type: goal.type === 'Income' ? TransactionType.INCOME : TransactionType.EXPENSE,
-        source: goal.name,
-        category: goal.category,
-        amount: initialDeposit,
-        date: new Date().toISOString().split('T')[0],
-        account: 'Default',
-      };
-      transactions = [...transactions, newTransaction];
-      localStorage.setItem('transactions', JSON.stringify(transactions));
+  const handleSaveGoal = async (goal: Omit<GoalDetails, 'id'> & { id?: number }) => {
+    try {
+      if (goal.id) {
+        const updatedGoal = await updateGoal({ ...goal, id: goal.id } as GoalDetails);
+        setGoals(goals.map(g => (g.id === updatedGoal.id ? updatedGoal : g)));
+        setMessage('Goal updated successfully!');
+        setMessageType('success');
+      } else {
+        const newGoal = await addGoal(goal);
+        setGoals([...goals, newGoal]);
+        setMessage('Goal added successfully!');
+        setMessageType('success');
+      }
+      setEditingGoal(null);
+    } catch (error) {
+      setMessage('Failed to save goal.');
+      setMessageType('error');
+    } finally {
+      setTimeout(() => {
+        setMessage(null);
+        setMessageType(null);
+      }, 3000);
     }
-
-    const depositAmount = transactions
-      .filter(t => t.category === goal.category && t.type === goal.type.toLowerCase())
-      .reduce((acc, t) => acc + t.amount, 0);
-
-    if (goal.id) {
-      setGoals(goals.map(g => g.id === goal.id ? { ...g, ...goal, depositAmount } as GoalDetails : g));
-    } else {
-      const newGoal = { ...goal, id: goals.length > 0 ? Math.max(...goals.map(g => g.id)) + 1 : 1, depositAmount };
-      setGoals([...goals, newGoal as GoalDetails]);
-    }
-    setEditingGoal(null);
   };
 
-  const handleDeleteGoal = (id: number) => {
-    setGoals(goals.filter(g => g.id !== id));
+  const handleDeleteGoal = async (id: number) => {
+    try {
+      await deleteGoal(id);
+      setGoals(goals.filter(g => g.id !== id));
+      setMessage('Goal deleted successfully!');
+      setMessageType('success');
+    } catch (error) {
+      setMessage('Failed to delete goal.');
+      setMessageType('error');
+    } finally {
+      setTimeout(() => {
+        setMessage(null);
+        setMessageType(null);
+      }, 3000);
+    }
   };
 
   const handleEditGoal = (goal: GoalDetails) => {
@@ -77,9 +88,14 @@ const Goals: React.FC<GoalsProps> = ({ currency }) => {
 
   return (
     <section aria-labelledby="goals-heading">
-      <h2 id="goals-heading" className="text-2xl font-bold text-white mb-6">Financial Goals</h2>
+      <h2 id="goals-heading" className="text-2xl font-bold text-white mb-6">Goal Settings</h2>
+      {message && (
+        <div className={`p-4 rounded-md mt-4 ${messageType === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`}>
+          {message}
+        </div>
+      )}
       {editingGoal ? (
-        <GoalForm
+        <GoalSettings
           type={editingGoal.type}
           onSave={handleSaveGoal}
           currency={currency}
@@ -93,9 +109,9 @@ const Goals: React.FC<GoalsProps> = ({ currency }) => {
             <button onClick={() => setActiveTab('Expense')} className={`px-4 py-2 text-sm font-medium ${activeTab === 'Expense' ? 'text-white border-b-2 border-cyan-500' : 'text-gray-400'}`}>Expense Goals</button>
           </div>
           {activeTab === 'Income' ? (
-            <GoalForm type="Income" onSave={handleSaveGoal} currency={currency} sourceOptions={incomeSourceOptions} />
+            <GoalSettings type="Income" onSave={handleSaveGoal} currency={currency} sourceOptions={incomeSourceOptions} />
           ) : (
-            <GoalForm type="Expense" onSave={handleSaveGoal} currency={currency} sourceOptions={expenseSourceOptions} />
+            <GoalSettings type="Expense" onSave={handleSaveGoal} currency={currency} sourceOptions={expenseSourceOptions} />
           )}
         </>
       )}

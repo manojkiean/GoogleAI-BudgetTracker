@@ -1,6 +1,6 @@
 
 import { supabase } from './supabase';
-import { Transaction, Todo, AccountDetails, User } from '../utils/types';
+import { Transaction, Todo, AccountDetails, User, Goal, GoalDetails } from '../utils/types';
 
 // Transactions
 export const getTransactions = async (): Promise<Transaction[]> => {
@@ -139,4 +139,97 @@ export const updateUser = async (user: User): Promise<User> => {
         throw new Error('Failed to update user: Database returned null.');
     }
     return data[0] as User;
+};
+
+// Goals
+export const getGoals = async (): Promise<GoalDetails[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+    const { data, error } = await supabase.from('goalsettings').select('id, goalname, category, targetamount, targetdate, status, user_id, type').eq('user_id', user.id);
+    if (error) throw new Error(error.message);
+    if (!data) return [];
+    // Manually map database columns to camelCase
+    return data.map(g => ({
+        id: g.id,
+        name: g.goalname,
+        category: g.category,
+        goalAmount: g.targetamount,
+        targetDate: g.targetdate,
+        status: g.status,
+        user_id: g.user_id,
+        type: g.type,
+    })) as GoalDetails[];
+};
+
+export const addGoal = async (goal: Omit<GoalDetails, 'id'>): Promise<GoalDetails> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not logged in');
+
+    const { name, goalAmount, targetDate, type, ...rest } = goal;
+    const goalData = {
+        ...rest,
+        goalname: name,
+        targetamount: goalAmount,
+        targetdate: targetDate,
+        user_id: user.id,
+        type: type
+    };
+
+    const { data, error } = await supabase.from('goalsettings').insert(goalData).select();
+    if (error) throw new Error(error.message);
+    if (!data) {
+        throw new Error('Failed to add goal: Database returned null.');
+    }
+    const newGoal = data[0];
+    // Manually map back to camelCase for the returned object
+    return {
+        id: newGoal.id,
+        name: newGoal.goalname,
+        category: newGoal.category,
+        goalAmount: newGoal.targetamount,
+        targetDate: newGoal.targetdate,
+        status: newGoal.status,
+        user_id: newGoal.user_id,
+        type: newGoal.type
+    } as GoalDetails;
+};
+
+export const updateGoal = async (goal: GoalDetails): Promise<GoalDetails> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not logged in');
+
+    const { id, name, goalAmount, targetDate, type, ...updateData } = goal;
+    const goalData = {
+        ...updateData,
+        goalname: name,
+        targetamount: goalAmount,
+        targetdate: targetDate,
+        type: type
+    };
+
+    const { data, error } = await supabase.from('goalsettings').update(goalData).eq('id', id).eq('user_id', user.id).select();
+    if (error) throw new Error(error.message);
+    if (!data) {
+        throw new Error('Failed to update goal: Database returned null.');
+    }
+    const updatedGoal = data[0];
+    // Manually map back to camelCase for the returned object
+    return {
+        id: updatedGoal.id,
+        name: updatedGoal.goalname,
+        category: updatedGoal.category,
+        goalAmount: updatedGoal.targetamount,
+        targetDate: updatedGoal.targetdate,
+        status: updatedGoal.status,
+        user_id: updatedGoal.user_id,
+        type: updatedGoal.type
+    } as GoalDetails;
+};
+
+
+export const deleteGoal = async (id: number): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not logged in');
+    const { error } = await supabase.from('goalsettings').delete().eq('id', id).eq('user_id', user.id);
+    if (error) throw new Error(error.message);
 };

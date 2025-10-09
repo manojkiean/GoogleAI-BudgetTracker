@@ -42,8 +42,10 @@ export interface GoalDetails {
     id: number;
     name: string;
     category: string;
-    depositAmount: number;
-    goalAmount: number;
+    goalAmount?: number;
+    targetDate?: string;
+    status?: string;
+    user_id?: string;
     type: 'Income' | 'Expense';
 }
 
