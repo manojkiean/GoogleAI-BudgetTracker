@@ -12,6 +12,7 @@ import {
   Transaction,
   TransactionType,
   AccountDetails,
+  GoalSettingDetails,
 } from './utils/types';
 import {
   getTodos,
@@ -23,14 +24,17 @@ import {
   updateTransaction,
   deleteTransaction,
   getAccounts,
+  getGoalSettings,
   updateUser,
 } from './utils/api';
 import { formatDate } from './utils/date';
 import { supabase } from './utils/supabase';
+import { incomeSourceOptions } from './utils/constants';
 
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const Transactions = lazy(() => import('./components/Transactions'));
-const Goals = lazy(() => import('./components/Goals'));
+const AddEditGoalSettingsForm = lazy(() => import('./components/AddEditGoalSettings'));
+const GoalSettingGrid = lazy(() => import('./components/GoalSettingGrid'));
 const Accounts = lazy(() => import('./components/Accounts'));
 const TodoList = lazy(() => import('./components/TodoList'));
 const Login = lazy(() => import('./components/Login'));
@@ -39,6 +43,7 @@ const Reports = lazy(() => import('./components/Reports'));
 const AddEditIncomeForm = lazy(() => import('./components/AddEditIncomeForm'));
 const AddEditExpenseForm = lazy(() => import('./components/AddEditExpenseForm'));
 const AddEditSubscriptionForm = lazy(() => import('./components/AddEditSubscriptionForm'));
+const AddEditGoalForm = lazy(() => import('./components/AddEditGoalForm'));
 
 const currencies: Currency[] = [
   { symbol: '$', code: 'USD' },
@@ -58,7 +63,9 @@ const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<AccountDetails[]>([]);
+  const [goalSettings, setGoalSettings] = useState<GoalSettingDetails[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [goalSettingsVersion, setGoalSettingsVersion] = useState(0);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -90,6 +97,7 @@ const App: React.FC = () => {
       fetchTodos();
       fetchTransactions();
       fetchAccounts();
+      fetchGoalSettings();
     }
   }, [isLoggedIn]);
 
@@ -106,6 +114,12 @@ const App: React.FC = () => {
   const fetchAccounts = async () => {
     const accounts = await getAccounts();
     setAccounts(accounts);
+  };
+
+  const fetchGoalSettings = async () => {
+    const goalSettings = await getGoalSettings();
+    setGoalSettings(goalSettings);
+    setGoalSettingsVersion(prevVersion => prevVersion + 1);
   };
 
   const handleLogin = async () => {
@@ -188,7 +202,9 @@ const App: React.FC = () => {
         ? Tab.INCOME
         : transaction.type === 'expense'
         ? Tab.EXPENSE
-        : Tab.SUBSCRIPTION
+        : transaction.type === 'subscription'
+        ? Tab.SUBSCRIPTION
+        : Tab.ADD_GOAL_DEPOSIT
     );
   };
 
@@ -237,7 +253,21 @@ const App: React.FC = () => {
           subscription={editingTransaction}
         />
       ),
-      [Tab.GOALS]: <Goals currency={currency} />,
+      [Tab.GOALSETTINGS]: (
+        <GoalSettingGrid currency={currency} goals={goalSettings} onGoalsUpdate={fetchGoalSettings} />
+      ),
+      [Tab.ADD_GOAL_DEPOSIT]: (
+        <AddEditGoalForm
+          key={goalSettingsVersion}
+          onSave={(goal) => onSave({ ...goal, type: TransactionType.GOALS })}
+          onCancel={onCancel}
+          transactions={transactions}
+          goalSettings={goalSettings}
+          goal={editingTransaction}
+          onDelete={onDelete}
+          onEdit={onEdit}
+        />
+      ),
       [Tab.ACCOUNTS]: (
         <Accounts currency={currency} transactions={transactions} accounts={accounts} />
       ),
@@ -270,10 +300,14 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-200 font-sans flex flex-col xl:flex-row">
+    <div className="relative min-h-screen bg-gray-900 text-gray-200 font-sans overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"></div>
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
+
       <Navigation activeTab={activeTab} setActiveTab={handleSetTab} sidebarOpen={sidebarOpen} />
       <main
-        className={`flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${
+        className={`relative z-10 flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${
           sidebarOpen ? 'xl:ml-64 2xl:ml-72' : 'xl:ml-20'
         }`}
       >

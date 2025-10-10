@@ -14,7 +14,7 @@ const TodoItem: React.FC<{
     onDelete: (id: number) => void;
     isDashboard?: boolean;
 }> = ({ todo, onToggle, onEdit, onDelete, isDashboard }) => (
-    <div className="flex items-center justify-between w-full bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+    <div className="flex items-center justify-between w-full bg-gray-700 bg-opacity-50 p-4 rounded-lg hover:bg-gray-600 transition-colors duration-200">
         <div className="flex items-center flex-1">
             {isDashboard && <ChecklistIcon className="w-5 h-5 text-gray-400 mr-3" />}
             {!isDashboard && <input
@@ -153,7 +153,7 @@ const TodoList: React.FC<TodoListProps> = ({ initialTodos, isDashboard = false, 
     const visibleTodos = isDashboard ? todos.slice(0, 5) : todos;
 
     return (
-        <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm p-6 rounded-xl shadow-lg">
             <div className="flex justify-between items-center mb-6">
                { !isDashboard ? <h2 className="text-2xl font-bold text-white">To-Do List</h2> : '' }
                 {!isDashboard && (

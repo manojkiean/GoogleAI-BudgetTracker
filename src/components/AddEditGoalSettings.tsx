@@ -1,16 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
-import { GoalDetails, Currency } from '../utils/types';
+import { GoalSettingDetails, Currency } from '../utils/types';
 import { formatDate } from '../utils/date';
 
-interface GoalFormProps {
+interface AddEditGoalSettingsFormProps {
   type: 'Income' | 'Expense';
-  onSave: (goal: Omit<GoalDetails, 'id'> & { id?: number }) => Promise<void>;
+  onSave: (goal: Omit<GoalSettingDetails, 'id'> & { id?: number }) => void;
   currency: Currency;
   sourceOptions: string[];
-  initialData?: GoalDetails | null;
+  initialData?: GoalSettingDetails | null;
 }
 
-const GoalForm: React.FC<GoalFormProps> = ({ type, onSave, currency, sourceOptions, initialData }) => {
+const AddEditGoalSettingsForm: React.FC<AddEditGoalSettingsFormProps> = ({ type, onSave, currency, sourceOptions, initialData }) => {
   const [name, setName] = useState('');
   const [category, setCategory] = useState(sourceOptions[0]);
   const [goalAmount, setGoalAmount] = useState('');
@@ -39,7 +40,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ type, onSave, currency, sourceOptio
     setStatus('In Progress');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !goalAmount) {
       setMessage('Please fill in all required fields.');
@@ -51,18 +52,20 @@ const GoalForm: React.FC<GoalFormProps> = ({ type, onSave, currency, sourceOptio
       return;
     }
 
-    await onSave({
-      id: initialData?.id,
-      name,
-      category,
-      goalAmount: parseFloat(goalAmount) || 0,
-      type,
-      targetDate,
-      status,
-    });
+    const goalData = {
+        name,
+        category,
+        goalAmount: parseFloat(goalAmount) || 0,
+        type,
+        targetDate: targetDate || null,
+        status,
+    };
 
-    if (!initialData) {
-      resetForm();
+    if (initialData && initialData.id) {
+        onSave({ ...goalData, id: initialData.id });
+    } else {
+        onSave(goalData);
+        resetForm();
     }
   };
 
@@ -103,10 +106,10 @@ const GoalForm: React.FC<GoalFormProps> = ({ type, onSave, currency, sourceOptio
         </div>
       </div>
       <div className="flex justify-end mt-4">
-        <button type="submit" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity duration-300">{initialData ? 'Save Changes' : 'Add Goal'}</button>
+        <button type="submit" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-lg hover:opacity-90 transition-opacity duration-300">{initialData ? 'Save Changes' : 'Add Goal Setting'}</button>
       </div>
     </form>
   );
 };
 
-export default GoalForm;
+export default AddEditGoalSettingsForm;

@@ -68,7 +68,7 @@ const AddEditTodoForm: React.FC<AddEditTodoFormProps> = ({ todo, onSave, onCance
   }
 
   return (
-    <div className="bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in mt-6">
+    <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-6 rounded-2xl shadow-lg animate-fade-in mt-6">
       <h3 className="text-xl font-semibold text-white mb-4">{todo ? 'Edit To-Do' : 'Add To-Do'}</h3>
       {message && (
             <div className={`p-4 mb-4 text-sm rounded-lg ${message.type === 'success' ? 'bg-green-800 text-green-200' : 'bg-red-800 text-red-200'}`}>

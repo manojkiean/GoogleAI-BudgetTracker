@@ -1,6 +1,6 @@
 
 import { supabase } from './supabase';
-import { Transaction, Todo, AccountDetails, User, Goal, GoalDetails } from '../utils/types';
+import { Transaction, Todo, AccountDetails, User, Goal, GoalSettingDetails } from '../utils/types';
 
 // Transactions
 export const getTransactions = async (): Promise<Transaction[]> => {
@@ -141,8 +141,8 @@ export const updateUser = async (user: User): Promise<User> => {
     return data[0] as User;
 };
 
-// Goals
-export const getGoals = async (): Promise<GoalDetails[]> => {
+// Goalsettings
+export const getGoalSettings = async (): Promise<GoalSettingDetails[]> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
     const { data, error } = await supabase.from('goalsettings').select('id, goalname, category, targetamount, targetdate, status, user_id, type').eq('user_id', user.id);
@@ -158,21 +158,20 @@ export const getGoals = async (): Promise<GoalDetails[]> => {
         status: g.status,
         user_id: g.user_id,
         type: g.type,
-    })) as GoalDetails[];
+    })) as GoalSettingDetails[];
 };
 
-export const addGoal = async (goal: Omit<GoalDetails, 'id'>): Promise<GoalDetails> => {
+export const addGoalSettings = async (goal: Omit<GoalSettingDetails, 'id'>): Promise<GoalSettingDetails> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not logged in');
 
-    const { name, goalAmount, targetDate, type, ...rest } = goal;
+    const { name, goalAmount, targetDate,...rest } = goal;
     const goalData = {
         ...rest,
         goalname: name,
         targetamount: goalAmount,
         targetdate: targetDate,
         user_id: user.id,
-        type: type
     };
 
     const { data, error } = await supabase.from('goalsettings').insert(goalData).select();
@@ -191,20 +190,19 @@ export const addGoal = async (goal: Omit<GoalDetails, 'id'>): Promise<GoalDetail
         status: newGoal.status,
         user_id: newGoal.user_id,
         type: newGoal.type
-    } as GoalDetails;
+    } as GoalSettingDetails;
 };
 
-export const updateGoal = async (goal: GoalDetails): Promise<GoalDetails> => {
+export const updateGoalSettings = async (goal: GoalSettingDetails): Promise<GoalSettingDetails> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not logged in');
 
-    const { id, name, goalAmount, targetDate, type, ...updateData } = goal;
+    const { id, name, goalAmount, targetDate, ...updateData } = goal;
     const goalData = {
         ...updateData,
         goalname: name,
         targetamount: goalAmount,
         targetdate: targetDate,
-        type: type
     };
 
     const { data, error } = await supabase.from('goalsettings').update(goalData).eq('id', id).eq('user_id', user.id).select();
@@ -223,11 +221,11 @@ export const updateGoal = async (goal: GoalDetails): Promise<GoalDetails> => {
         status: updatedGoal.status,
         user_id: updatedGoal.user_id,
         type: updatedGoal.type
-    } as GoalDetails;
+    } as GoalSettingDetails;
 };
 
 
-export const deleteGoal = async (id: number): Promise<void> => {
+export const deleteGoalSettings = async (id: number): Promise<void> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not logged in');
     const { error } = await supabase.from('goalsettings').delete().eq('id', id).eq('user_id', user.id);

@@ -6,7 +6,7 @@ import ExpensePieChart from './charts/ExpensePieChart';
 import BudgetBarChart from './charts/BudgetBarChart';
 import { Currency, ExpenseSource, Todo, GoalDetails, Transaction, TransactionType } from '../utils/types';
 import TodoList from './TodoList';
-import GoalList from './GoalList';
+import GoalList from './GoalSettingsCards';
 import Calendar from './Calendar';
 import { formatDate } from '../utils/date';
 

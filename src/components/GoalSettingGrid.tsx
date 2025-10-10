@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { GoalDetails, Currency, Goal } from '../utils/types';
-import GoalSettings from './GoalSettings';
-import GoalList from './GoalList';
-import { incomeSourceOptions as incomeOptionsConstant, expenseSourceOptions as expenseOptionsConstant } from '../utils/constants';
-import { getGoals, addGoal, updateGoal, deleteGoal } from '../utils/api';
 
-interface GoalsProps {
+import React, { useState } from 'react';
+import { GoalSettingDetails, Currency, Goal } from '../utils/types';
+import GoalSettings from './AddEditGoalSettings';
+import GoalSettingsCards from './GoalSettingsCards';
+import { incomeSourceOptions as incomeOptionsConstant, expenseSourceOptions as expenseOptionsConstant } from '../utils/constants';
+import { addGoalSettings, updateGoalSettings, deleteGoalSettings } from '../utils/api';
+
+interface GoalSettingGridProps {
   currency: Currency;
+  goals: GoalSettingDetails[];
+  onGoalsUpdate: () => void;
 }
 
 const incomeSourceOptions = incomeOptionsConstant
@@ -17,41 +20,25 @@ const expenseSourceOptions = expenseOptionsConstant
     .filter((item: any) => item.goal === Goal.SAVINGS)
     .map((item: any) => item.source);
 
-const Goals: React.FC<GoalsProps> = ({ currency }) => {
+const GoalSettingGrid: React.FC<GoalSettingGridProps> = ({ currency, goals, onGoalsUpdate }) => {
   const [activeTab, setActiveTab] = useState('Income');
-  const [goals, setGoals] = useState<GoalDetails[]>([]);
-  const [editingGoal, setEditingGoal] = useState<GoalDetails | null>(null);
+  const [editingGoal, setEditingGoal] = useState<GoalSettingDetails | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
 
-  useEffect(() => {
-    fetchGoals();
-  }, []);
-
-  const fetchGoals = async () => {
-    try {
-      const goalsFromApi = await getGoals();
-      setGoals(goalsFromApi);
-    } catch (error) {
-      setMessage('Failed to fetch goals.');
-      setMessageType('error');
-    }
-  };
-
-  const handleSaveGoal = async (goal: Omit<GoalDetails, 'id'> & { id?: number }) => {
+  const handleSaveGoal = async (goal: Omit<GoalSettingDetails, 'id'> & { id?: number }) => {
     try {
       if (goal.id) {
-        const updatedGoal = await updateGoal({ ...goal, id: goal.id } as GoalDetails);
-        setGoals(goals.map(g => (g.id === updatedGoal.id ? updatedGoal : g)));
-        setMessage('Goal updated successfully!');
+        await updateGoalSettings({ ...goal, id: goal.id } as GoalSettingDetails);
+        setMessage('Goal settings updated successfully!');
         setMessageType('success');
       } else {
-        const newGoal = await addGoal(goal);
-        setGoals([...goals, newGoal]);
-        setMessage('Goal added successfully!');
+        await addGoalSettings(goal);
+        setMessage('Goal settings added successfully!');
         setMessageType('success');
       }
       setEditingGoal(null);
+      onGoalsUpdate();
     } catch (error) {
       setMessage('Failed to save goal.');
       setMessageType('error');
@@ -65,10 +52,10 @@ const Goals: React.FC<GoalsProps> = ({ currency }) => {
 
   const handleDeleteGoal = async (id: number) => {
     try {
-      await deleteGoal(id);
-      setGoals(goals.filter(g => g.id !== id));
-      setMessage('Goal deleted successfully!');
+      await deleteGoalSettings(id);
+      setMessage('Goal settings deleted successfully!');
       setMessageType('success');
+      onGoalsUpdate();
     } catch (error) {
       setMessage('Failed to delete goal.');
       setMessageType('error');
@@ -80,7 +67,7 @@ const Goals: React.FC<GoalsProps> = ({ currency }) => {
     }
   };
 
-  const handleEditGoal = (goal: GoalDetails) => {
+  const handleEditGoal = (goal: GoalSettingDetails) => {
     setEditingGoal(goal);
   };
 
@@ -115,9 +102,9 @@ const Goals: React.FC<GoalsProps> = ({ currency }) => {
           )}
         </>
       )}
-      <GoalList goals={filteredGoals} currency={currency} onEdit={handleEditGoal} onDelete={handleDeleteGoal} />
+      <GoalSettingsCards goals={filteredGoals} currency={currency} onEdit={handleEditGoal} onDelete={handleDeleteGoal} />
     </section>
   );
 };
 
-export default Goals;
+export default GoalSettingGrid;

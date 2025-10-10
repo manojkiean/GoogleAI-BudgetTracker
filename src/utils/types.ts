@@ -5,7 +5,8 @@ export enum Tab {
   INCOME = 'Income',
   EXPENSE = 'Expense',
   SUBSCRIPTION = 'Subscription',
-  GOALS = 'Goals',
+  GOALSETTINGS = 'Goal Settings',
+  ADD_GOAL_DEPOSIT = 'Goals',
   ACCOUNTS = 'Accounts',
   TODO = 'To-Do List',
   MY_ACCOUNT = 'My Account',
@@ -21,6 +22,8 @@ export enum TransactionType {
   INCOME = 'income',
   EXPENSE = 'expense',
   SUBSCRIPTION = 'subscription',
+  GOALSETTINGS = 'goalSettings',
+  GOALS = 'goals',
 }
 
 export interface Transaction {
@@ -35,10 +38,11 @@ export interface Transaction {
   nextPayment?: string;
   status?: 'Active' | 'Cancelled';
   subscriptionType?: 'Recurring' | 'One Off';
+  goalAmount?: number;
   renewalDate?: string;
 }
 
-export interface GoalDetails {
+export interface GoalSettingDetails {
     id: number;
     name: string;
     category: string;

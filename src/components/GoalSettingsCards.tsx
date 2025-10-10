@@ -1,16 +1,16 @@
 import React from 'react';
-import { GoalDetails, Currency } from '../utils/types';
+import { GoalSettingDetails, Currency } from '../utils/types';
 import { formatDate } from '../utils/date';
 
-interface GoalListProps {
-  goals: GoalDetails[];
+interface GoalSettingsCardsProps {
+  goals: GoalSettingDetails[];
   currency: Currency;
-  onEdit?: (goal: GoalDetails) => void;
+  onEdit?: (goal: GoalSettingDetails) => void;
   onDelete?: (id: number) => void;
   progressBarColor?: string;
 }
 
-const GoalList: React.FC<GoalListProps> = ({ goals, currency, onEdit, onDelete }) => {
+const GoalSettingsCards: React.FC<GoalSettingsCardsProps> = ({ goals, currency, onEdit, onDelete }) => {
   if (goals.length === 0) {
     return null;
   }
@@ -75,4 +75,4 @@ const GoalList: React.FC<GoalListProps> = ({ goals, currency, onEdit, onDelete }
   );
 };
 
-export default GoalList;
+export default GoalSettingsCards;

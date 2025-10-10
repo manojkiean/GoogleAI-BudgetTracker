@@ -79,7 +79,7 @@ const AddEditIncomeForm: React.FC<AddEditIncomeFormProps> = ({ income, transacti
 
   return (
     <>
-      <div className="bg-gray-800 p-6 rounded-2xl shadow-lg animate-fade-in mt-6">
+      <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm p-6 rounded-2xl shadow-lg animate-fade-in mt-6">
         <h3 className="text-xl font-semibold text-white mb-4">{income ? 'Edit Income' : 'Add Income'}</h3>
         {message && (
             <div className={`p-4 mb-4 text-sm rounded-lg ${message.type === 'success' ? 'bg-green-800 text-green-200' : 'bg-red-800 text-red-200'}`}>
