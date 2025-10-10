@@ -4,9 +4,8 @@ import { DollarIcon, PoundIcon, EuroIcon, MenuIcon, IncomeIcon, ExpensesIcon, Su
 import SummaryCard from './SummaryCard';
 import ExpensePieChart from './charts/ExpensePieChart';
 import BudgetBarChart from './charts/BudgetBarChart';
-import { Currency, ExpenseSource, Todo, GoalDetails, Transaction, TransactionType } from '../utils/types';
+import { Currency, ExpenseSource, Todo, Transaction, TransactionType } from '../utils/types';
 import TodoList from './TodoList';
-import GoalList from './GoalSettingsCards';
 import Calendar from './Calendar';
 import { formatDate } from '../utils/date';
 
@@ -21,21 +20,8 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
   const [showIncomeDetails, setShowIncomeDetails] = useState(true);
   const [showExpenseDetails, setShowExpenseDetails] = useState(true);
   const [showSubscriptions, setShowSubscriptions] = useState(true);
-  const [goals, setGoals] = useState<GoalDetails[]>([]);
-
-  useEffect(() => {
-    const savedGoals = localStorage.getItem('goals');
-    if (savedGoals) {
-      setGoals(JSON.parse(savedGoals));
-    }
-    window.addEventListener('storage', () => {
-      const savedGoals = localStorage.getItem('goals');
-      if (savedGoals) {
-        setGoals(JSON.parse(savedGoals));
-      }
-    });
-  }, []);
-
+  const goals = transactions.filter(t => t.type === 'goals');
+  
   const { totalIncome, totalExpenses, netBalance, subscriptions, incomeTransactions, expenseTransactions } = useMemo(() => {
     const incomeTrans = transactions.filter(t => t.type === TransactionType.INCOME);
     const expenseTrans = transactions.filter(t => t.type === TransactionType.EXPENSE);
@@ -57,9 +43,6 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
       //expenseTransactions: [...expenseTrans, ...subscriptionTrans],
     };
   }, [transactions]);
-
-  const incomeGoals = goals.filter(goal => goal.type === 'Income');
-  const expenseGoals = goals.filter(goal => goal.type === 'Expense');
 
   return (
     <section aria-labelledby="dashboard-heading">
@@ -163,16 +146,44 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
                     </div>
                     <ExpensePieChart currency={currency} onCategoryClick={onCategorySelect} expenses={expenseTransactions} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
-                        <h3 className="text-xl font-semibold mb-4 flex items-center"><GoalIcon /> <span className="ml-2">Income Goals</span></h3>
-                        <GoalList goals={incomeGoals} currency={currency} progressBarColor="bg-gradient-to-r from-green-400 to-blue-500" />
-                    </div>
-                    <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
-                        <h3 className="text-xl font-semibold mb-4 flex items-center"><GoalIcon /> <span className="ml-2">Expense Goals</span></h3>
-                        <GoalList goals={expenseGoals} currency={currency} progressBarColor="bg-gradient-to-r from-red-500 to-orange-500" />
-                    </div>
-                </div>
+                <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
+  <h3 className="text-xl font-semibold mb-4 flex items-center">
+    <GoalIcon />
+    <span className="ml-2">Goals</span>
+  </h3>
+
+  <div className="space-y-4">
+    {goals.map((goal, index) => {
+      const progress = Math.min((goal.amount / goal.goalAmount) * 100, 100);
+
+      // alternate color classes
+      const colorClass =
+        index % 2 === 0
+          ? "bg-gradient-to-r from-cyan-500 to-blue-500"
+          : "bg-gradient-to-r from-red-500 to-orange-500";
+
+      return (
+        <div key={index} className="bg-gray-700 p-4 rounded-xl">
+          <div className="flex justify-between mb-2 text-sm font-medium">
+            <span>{goal.source}</span>
+            <span>
+              {currency.symbol} {goal.amount} / {currency.symbol} {goal.goalAmount}
+            </span>
+          </div>
+
+          <div className="w-full bg-gray-600 rounded-full h-3">
+            <div
+              className={`h-3 rounded-full ${colorClass}`}
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</div>
+
+
                  <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
                     <Calendar subscriptions={subscriptions} todos={todos} />
                 </div>

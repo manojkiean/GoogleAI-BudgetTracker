@@ -178,18 +178,18 @@ const AddEditGoalForm: React.FC<AddEditGoalFormProps> = ({ goal, transactions, g
             <table className="min-w-full text-sm text-left text-gray-400">
               <thead className="text-xs text-gray-400 uppercase bg-gray-700">
                 <tr>
+                <th scope="col" className="px-6 py-3">Goal's</th>
+                <th scope="col" className="px-6 py-3">Amount</th>
                   <th scope="col" className="px-6 py-3">Date</th>
-                  <th scope="col" className="px-6 py-3">Amount</th>
-                  <th scope="col" className="px-6 py-3">Description</th>
                   <th scope="col" className="px-6 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredTransactions.map(t => (
                   <tr key={t.id} className="bg-gray-800 border-b border-gray-700">
-                    <td className="px-6 py-4">{formatDate(t.date)}</td>
-                    <td className="px-6 py-4">{t.amount}</td>
                     <td className="px-6 py-4">{t.source}</td>
+                    <td className="px-6 py-4">{t.amount}</td>
+                    <td className="px-6 py-4">{formatDate(t.date,'DD-MM-YYYY')}</td>
                     <td className="px-6 py-4">
                       <button onClick={() => onEdit(t)} className="font-medium text-cyan-500 hover:underline mr-4">Edit</button>
                       <button onClick={() => onDelete(t.id)} className="font-medium text-red-500 hover:underline">Delete</button>
