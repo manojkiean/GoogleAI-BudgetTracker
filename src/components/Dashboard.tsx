@@ -61,7 +61,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
                     </div>
                     <BudgetBarChart currency={currency} onCategoryClick={onCategorySelect} expenses={expenseTransactions} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <div className="bg-gray-800 p-6 rounded-2xl shadow-lg">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-semibold flex items-center"><IncomeIcon /> <span className="ml-2">Income</span></h3>

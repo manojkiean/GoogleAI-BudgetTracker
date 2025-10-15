@@ -2,6 +2,7 @@
 import React from 'react';
 import { Tab } from '../utils/types';
 import { DashboardIcon, ExpensesIcon, GoalIcon, AccountsIcon, TodoIcon, MyAccountIcon, CalcIcon, ReportsIcon, IncomeIcon, SubscriptionsIcon, AddIcon } from './icons/IconComponents';
+import Tooltip from './Tooltip';
 
 interface NavigationProps {
   activeTab: Tab;
@@ -66,20 +67,24 @@ const NavItem: React.FC<{
     isActive: boolean;
     onClick: () => void;
     sidebarOpen: boolean;
-}> = ({ item, isActive, onClick, sidebarOpen }) => (
-    <button
-        onClick={onClick}
-        className={`flex items-center w-full px-4 py-3 text-left rounded-lg transition-colors duration-200 ${
-            isActive
-                ? 'bg-cyan-500 text-white shadow-lg'
-                : 'text-gray-400 hover:bg-gray-700 hover:text-white'
-        }`}
-        aria-current={isActive ? 'page' : undefined}
-    >
-        {item.icon}
-        <span className={`ml-4 font-medium ${sidebarOpen ? 'lg:inline' : 'hidden'}`}>{item.tab}</span>
-    </button>
-);
+}> = ({ item, isActive, onClick, sidebarOpen }) => {
+    const navButton = (
+        <button
+            onClick={onClick}
+            className={`flex items-center w-full px-4 py-3 text-left rounded-lg transition-colors duration-200 ${
+                isActive
+                    ? 'bg-cyan-500 text-white shadow-lg'
+                    : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+            } ${!sidebarOpen ? 'justify-center' : ''}`}
+            aria-current={isActive ? 'page' : undefined}
+        >
+            {item.icon}
+            {sidebarOpen && <span className="ml-4 font-medium">{item.tab}</span>}
+        </button>
+    );
+
+    return sidebarOpen ? navButton : <Tooltip text={item.tab}>{navButton}</Tooltip>;
+};
 
 const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, sidebarOpen }) => {
   return (
@@ -121,7 +126,6 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, sideba
             aria-current={activeTab === item.tab ? 'page' : undefined}
           >
             {item.icon}
-            <span className="text-xs mt-1">{item.tab.split(' ')[0]}</span>
           </button>
         ))}
       </nav>

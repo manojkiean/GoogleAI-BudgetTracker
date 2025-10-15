@@ -308,10 +308,10 @@ const App: React.FC = () => {
       <Navigation activeTab={activeTab} setActiveTab={handleSetTab} sidebarOpen={sidebarOpen} />
       <main
         className={`relative z-10 flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 ${
-          sidebarOpen ? 'xl:ml-64 2xl:ml-72' : 'xl:ml-20'
+          sidebarOpen ? 'lg:ml-64 xl:ml-72' : 'lg:ml-20'
         }`}
       >
-        <Header currentUser={currentUser} setActiveTab={handleSetTab} toggleSidebar={toggleSidebar} />
+        <Header currentUser={currentUser} setActiveTab={handleSetTab} toggleSidebar={toggleSidebar} activeTab={activeTab} />
         <div className="mt-8 animate-fade-in">
           <Suspense
             fallback={
