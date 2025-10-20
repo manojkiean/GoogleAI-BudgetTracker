@@ -22,7 +22,7 @@ const Accounts: React.FC<AccountsProps> = ({ transactions, currency, accounts })
 
             if (type === 'income') {
                 acc[account].income += convertedAmount;
-            } else {
+            } else if(type != 'goals') {
                 acc[account].expense += convertedAmount;
             }
 
