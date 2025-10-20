@@ -26,6 +26,7 @@ import {
   getAccounts,
   getGoalSettings,
   updateUser,
+  getUser,
 } from './utils/api';
 import { formatDate } from './utils/date';
 import { supabase } from './utils/supabase';
@@ -69,22 +70,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        const user = {
-          userId: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata.full_name,
-          avatar: session.user.user_metadata.avatar_url,
-          currency: 'GBP',
-        };
-        setCurrentUser(user);
-        setIsLoggedIn(true);
-        setActiveTab(Tab.DASHBOARD);
-      } else {
-        setCurrentUser(null);
-        setIsLoggedIn(false);
-        setActiveTab(Tab.DASHBOARD);
-      }
+      setIsLoggedIn(!!session);
     });
 
     return () => {
@@ -93,12 +79,29 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchTodos();
-      fetchTransactions();
-      fetchAccounts();
-      fetchGoalSettings();
-    }
+    const fetchAllData = async () => {
+      if (isLoggedIn) {
+        const userProfile = await getUser();
+        if (userProfile) {
+          setCurrentUser(userProfile);
+          const userCurrency = currencies.find(c => c.code === userProfile.currency) || currencies[0];
+          setCurrency(userCurrency);
+        }
+
+        fetchTodos();
+        fetchTransactions();
+        fetchAccounts();
+        fetchGoalSettings();
+      } else {
+        setCurrentUser(null);
+        setTodos([]);
+        setTransactions([]);
+        setAccounts([]);
+        setGoalSettings([]);
+      }
+    };
+
+    fetchAllData();
   }, [isLoggedIn]);
 
   const fetchTodos = async () => {
@@ -139,8 +142,8 @@ const App: React.FC = () => {
   };
 
   const handleUpdateUser = async (user: User) => {
-    //const updatedUser = await updateUser(user);
-    setCurrentUser(user);
+    const updatedUser = await updateUser(user);
+    setCurrentUser(updatedUser);
     const newCurrency = currencies.find((c) => c.code === user.currency);
     if (newCurrency) {
       setCurrency(newCurrency);

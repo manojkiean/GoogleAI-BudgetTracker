@@ -129,16 +129,62 @@ export const getAccounts = async (): Promise<AccountDetails[]> => {
 };
 
 // Users
-export const updateUser = async (user: User): Promise<User> => {
+export const getUser = async (): Promise<User | null> => {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) return null;
+
+    let { data: userData, error: fetchError } = await supabase.from('users').select('*').eq('user_id', authUser.id).single();
+
+    if (fetchError && fetchError.code === 'PGRST116') {
+        // User does not exist, create a new one
+        const newUser = {
+            user_id: authUser.id,
+            email: authUser.email,
+            name: authUser.user_metadata.full_name || 'New User',
+            currency: 'USD', // Default currency
+        };
+
+        const { data: createdUser, error: createError } = await supabase.from('users').insert(newUser).select().single();
+
+        if (createError) {
+            return null;
+        }
+        userData = createdUser;
+    } else if (fetchError) {
+        return null;
+    }
+
+    if (!userData) return null;
+
+    return {
+        userId: userData.user_id,
+        name: userData.name,
+        email: userData.email,
+        currency: userData.currency,
+        avatar: authUser.user_metadata.avatar_url,
+    };
+};
+
+export const updateUser = async (user: Partial<User>): Promise<User> => {
     const { data: { user: authUser } } = await supabase.auth.getUser();
     if (!authUser) throw new Error('User not logged in');
 
-    const { data, error } = await supabase.from('users').update({ name: user.name }).eq('user_id', authUser.id).select();
+    const { name, currency } = user;
+    const updateData = { name, currency };
+
+    const { data, error } = await supabase.from('users').update(updateData).eq('user_id', authUser.id).select().single();
     if (error) throw new Error(error.message);
     if (!data) {
         throw new Error('Failed to update user: Database returned null.');
     }
-    return data[0] as User;
+
+    return {
+        userId: data.user_id,
+        name: data.name,
+        email: data.email,
+        currency: data.currency,
+        avatar: authUser.user_metadata.avatar_url,
+    };
 };
 
 // Goalsettings

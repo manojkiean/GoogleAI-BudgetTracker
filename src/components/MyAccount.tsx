@@ -8,7 +8,7 @@ interface MyAccountProps {
     email: string;
     currency: string;
   };
-  onUpdateUser: (user: MyAccountProps['user']) => void;
+  onUpdateUser: (user: MyAccountProps['user']) => Promise<void>;
   onLogout: () => void;
 }
 
@@ -17,10 +17,9 @@ const MyAccount: React.FC<MyAccountProps> = ({ user, onUpdateUser, onLogout }) =
   const [currency, setCurrency] = useState(user.currency);
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
-      //onUpdateUser({ ...user, name, currency });
-      onUpdateUser({ ...user, name });
+      await onUpdateUser({ ...user, name, currency });
       setMessage({type: 'success', text: 'Account saved successfully!'})
     } catch (error) {
       setMessage({type: 'error', text: 'Failed to save account.'})

@@ -20,7 +20,6 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
   const [showIncomeDetails, setShowIncomeDetails] = useState(true);
   const [showExpenseDetails, setShowExpenseDetails] = useState(true);
   const [showSubscriptions, setShowSubscriptions] = useState(true);
-  const goals = transactions.filter(t => t.type === 'goals');
   
   const { totalIncome, totalExpenses, netBalance, subscriptions, incomeTransactions, expenseTransactions } = useMemo(() => {
     const incomeTrans = transactions.filter(t => t.type === TransactionType.INCOME);
@@ -42,6 +41,22 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
       expenseTransactions: expenseTrans,
       //expenseTransactions: [...expenseTrans, ...subscriptionTrans],
     };
+  }, [transactions]);
+
+  const groupedGoals = useMemo(() => {
+    const goals = transactions.filter(t => t.type === 'goals');
+    const goalMap = new Map<string, Transaction>();
+
+    goals.forEach(goal => {
+      const existingGoal = goalMap.get(goal.source);
+      if (existingGoal) {
+        existingGoal.amount += goal.amount;
+      } else {
+        goalMap.set(goal.source, { ...goal });
+      }
+    });
+
+    return Array.from(goalMap.values());
   }, [transactions]);
 
   return (
@@ -153,7 +168,7 @@ const Dashboard: React.FC<DashboardProps> = ({ currency, onCategorySelect, todos
   </h3>
 
   <div className="space-y-4">
-    {goals.map((goal, index) => {
+    {groupedGoals.map((goal, index) => {
       const progress = Math.min((goal.amount / goal.goalAmount) * 100, 100);
 
       // alternate color classes
